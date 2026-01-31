@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SERDIT | Nexus</title>
+    <title>SERDIT | Orbit</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
@@ -13,7 +13,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
     <style>
-        /* --- THEME: NEXUS DARK --- */
+        /* --- THEME: ORBIT DARK --- */
         :root {
             --bg: #000000;
             --surface: #0a0a0f;
@@ -27,7 +27,6 @@
             
             --text: #f1f5f9;
             --text-muted: #64748b;
-            --nav-height: 70px;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
@@ -36,7 +35,7 @@
             font-family: 'Outfit', sans-serif;
             background-color: var(--bg);
             color: var(--text);
-            height: 100vh;
+            height: 100dvh;
             overflow: hidden;
             display: flex;
         }
@@ -44,7 +43,7 @@
         /* --- TOASTS --- */
         #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 12000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; width: 90%; max-width: 350px; }
         .toast {
-            background: rgba(20, 20, 25, 0.95); backdrop-filter: blur(12px);
+            background: rgba(15, 15, 20, 0.95); backdrop-filter: blur(12px);
             border: 1px solid var(--border); padding: 14px 20px; border-radius: 50px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.8); font-size: 0.9rem; font-weight: 500;
             display: flex; align-items: center; gap: 12px; animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -52,17 +51,24 @@
         .toast.success i { color: var(--success); } .toast.error i { color: var(--danger); }
         @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        /* --- LAYOUT --- */
+        /* --- SIDEBAR (Navigation) --- */
         .sidebar {
             width: 80px; background: var(--surface); border-right: 1px solid var(--border);
-            display: flex; flex-direction: column; align-items: center; padding: 25px 0; z-index: 50;
+            display: flex; flex-direction: column; align-items: center; padding: 25px 0; z-index: 1000;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
         
-        .mobile-nav {
-            display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: var(--nav-height);
-            background: rgba(10, 10, 15, 0.98); backdrop-filter: blur(20px);
-            border-top: 1px solid var(--border); z-index: 100;
-            justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom);
+        /* Mobile Menu Toggle */
+        .mobile-menu-btn {
+            display: none; position: fixed; top: 15px; left: 15px; z-index: 1100;
+            background: rgba(10, 10, 15, 0.8); backdrop-filter: blur(10px);
+            border: 1px solid var(--border); color: white; width: 40px; height: 40px;
+            border-radius: 10px; font-size: 1.2rem; cursor: pointer; align-items: center; justify-content: center;
+        }
+
+        /* Sidebar Overlay for Mobile */
+        .sidebar-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 900; opacity: 0; transition: opacity 0.3s;
         }
 
         .nav-btn {
@@ -75,16 +81,28 @@
         .nav-btn.pulse { animation: pulse 2s infinite; color: var(--neon-p); }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         
-        .app-container { flex: 1; display: flex; position: relative; height: 100%; width: 100%; }
+        /* --- FAB (Floating Message Button) --- */
+        .fab-message {
+            position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
+            background: var(--neon-b); color: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5); cursor: pointer; z-index: 500;
+            transition: transform 0.2s, opacity 0.2s; border: none;
+        }
+        .fab-message:active { transform: scale(0.9); }
+        .fab-message.hidden { opacity: 0; pointer-events: none; transform: scale(0.5); }
+
+        .app-container { flex: 1; display: flex; position: relative; height: 100%; width: 100%; overflow: hidden; }
         .view { flex: 1; display: none; flex-direction: column; height: 100%; overflow: hidden; animation: fadeIn 0.3s ease; }
         .view.active { display: flex; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         /* --- GALLERY --- */
         .header {
-            height: 60px; padding: 0 20px; border-bottom: 1px solid var(--border);
+            height: 70px; padding: 0 20px; border-bottom: 1px solid var(--border);
             display: flex; justify-content: space-between; align-items: center;
             background: rgba(5, 5, 7, 0.9); backdrop-filter: blur(10px); z-index: 20;
+            padding-left: 70px; /* Space for menu button on mobile */
         }
 
         .gallery-grid {
@@ -129,7 +147,7 @@
         .chat-tab { flex: 1; padding: 10px; background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; text-align: center; font-size: 0.85rem; font-weight: 600; transition: 0.2s; }
         .chat-tab.active { background: var(--neon-b); color: white; border-color: var(--neon-b); }
 
-        .inbox-item { padding: 15px 20px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; gap: 15px; transition: 0.2s; }
+        .inbox-item { padding: 15px 20px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; gap: 15px; transition: 0.2s; position: relative; }
         .inbox-item:hover { background: var(--surface-2); }
         .inbox-item.active-chat { background: rgba(59, 130, 246, 0.1); border-left: 3px solid var(--neon-b); }
         
@@ -182,9 +200,25 @@
 
         /* --- MOBILE --- */
         @media (max-width: 768px) {
-            .sidebar { display: none; }
-            .mobile-nav { display: flex; }
-            .app-container { height: calc(100vh - var(--nav-height)); } 
+            .sidebar { 
+                position: fixed; left: -100%; top: 0; bottom: 0; width: 80%; max-width: 300px;
+                background: rgba(10, 10, 15, 0.95); backdrop-filter: blur(20px);
+                box-shadow: 50px 0 100px rgba(0,0,0,0.5); border-right: 1px solid var(--border);
+                align-items: flex-start; padding: 80px 20px;
+            }
+            .sidebar.open { transform: translateX(100%); }
+            .sidebar-overlay.active { display: block; opacity: 1; }
+            
+            /* Sidebar Links Style for Drawer */
+            .nav-btn { width: 100%; justify-content: flex-start; padding-left: 10px; font-size: 1.1rem; gap: 15px; }
+            .nav-btn i { font-size: 1.3rem; width: 30px; text-align: center; }
+            .nav-btn span { display: inline-block; font-weight: 500; }
+            
+            .mobile-menu-btn { display: flex; }
+            
+            /* Full Height Container */
+            .app-container { height: 100%; } 
+            
             .msg-layout { position: relative; }
             .inbox-list { width: 100%; }
             .chat-area { position: absolute; inset: 0; transform: translateX(100%); transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 50; }
@@ -197,7 +231,7 @@
             
             .back-btn { display: block; }
         }
-        @media (min-width: 769px) { .back-btn { display: none; } }
+        @media (min-width: 769px) { .back-btn { display: none; } .nav-btn span { display: none; } }
         
         .back-btn { background: none; border: none; color: white; font-size: 1.5rem; margin-right: 15px; cursor: pointer; }
         .preview-box { width: 100%; height: 120px; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; border-radius: 12px; margin-top: 10px; overflow: hidden; border: 1px solid var(--border); position: relative; }
@@ -205,34 +239,49 @@
         
         /* Search Results & Lists */
         .participant-tag { background: var(--neon-b); color: white; padding: 5px 10px; border-radius: 15px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 5px; margin: 2px; }
-        
         .create-btn-area { margin-top: 15px; }
         .new-chat-btn { width:100%; padding:14px; background:rgba(59, 130, 246, 0.1); border:1px dashed var(--neon-b); color:var(--neon-b); border-radius:12px; cursor:pointer; font-weight:600; transition:0.2s; }
-        
         .search-input { width: 100%; padding: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: white; margin-bottom: 10px; }
+        .search-res-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
+        .search-res-item:hover { background: var(--surface-2); }
     </style>
 </head>
 <body>
 
     <div id="toast-container"></div>
 
-    <nav class="sidebar">
-        <div style="font-weight:900; color:var(--neon-b); font-size:1.5rem; margin-bottom:40px; cursor:default; font-family:'JetBrains Mono';">S21</div>
-        <button id="nav-gallery" class="nav-btn active" onclick="switchView('gallery')" title="Gallery"><i class="ri-gallery-view-2"></i></button>
-        <button id="nav-msg" class="nav-btn" onclick="switchView('messaging')" title="Comms"><i class="ri-chat-4-fill"></i></button>
-        <button class="nav-btn" onclick="openUpload()" title="Upload"><i class="ri-upload-cloud-2-fill"></i></button>
+    <!-- MOBILE MENU BTN -->
+    <button class="mobile-menu-btn" onclick="toggleSidebar()"><i class="ri-menu-line"></i></button>
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- SIDEBAR (DRAWER ON MOBILE) -->
+    <nav class="sidebar" id="main-sidebar">
+        <div style="font-weight:900; color:var(--neon-b); font-size:1.5rem; margin-bottom:40px; cursor:default; font-family:'JetBrains Mono'; width:100%; text-align:center;">S23</div>
+        
+        <button id="nav-gallery" class="nav-btn active" onclick="switchView('gallery')" title="Gallery">
+            <i class="ri-gallery-view-2"></i> <span>Gallery</span>
+        </button>
+        <button id="nav-msg" class="nav-btn" onclick="switchView('messaging')" title="Comms">
+            <i class="ri-chat-4-fill"></i> <span>Messages</span>
+        </button>
+        <button class="nav-btn" onclick="openUpload()" title="Upload">
+            <i class="ri-upload-cloud-2-fill"></i> <span>Upload</span>
+        </button>
+        
         <div style="flex:1"></div>
-        <button id="admin-btn" class="nav-btn hidden" style="color:var(--danger)" onclick="toggleModal('admin')" title="God Mode"><i class="ri-eye-2-fill"></i></button>
-        <button id="auth-btn" class="nav-btn pulse" onclick="toggleModal('auth')" title="Connect"><i class="ri-user-3-fill"></i></button>
+        
+        <button id="admin-btn" class="nav-btn hidden" style="color:var(--danger)" onclick="toggleModal('admin')" title="God Mode">
+            <i class="ri-eye-2-fill"></i> <span>Admin</span>
+        </button>
+        <button id="auth-btn" class="nav-btn pulse" onclick="toggleModal('auth')" title="Connect">
+            <i class="ri-user-3-fill"></i> <span>Profile</span>
+        </button>
     </nav>
 
-    <nav class="mobile-nav">
-        <button class="nav-btn active" onclick="switchView('gallery')"><i class="ri-gallery-view-2"></i></button>
-        <button class="nav-btn" onclick="switchView('messaging')"><i class="ri-chat-4-fill"></i></button>
-        <button class="nav-btn" onclick="openUpload()" style="background:var(--neon-b); color:white; border-radius:50%; margin-bottom:40px; box-shadow:0 0 25px rgba(96, 165, 250, 0.4);"><i class="ri-add-line"></i></button>
-        <button id="mob-admin-btn" class="nav-btn hidden" style="color:var(--danger)" onclick="toggleModal('admin')"><i class="ri-eye-2-fill"></i></button>
-        <button id="mob-auth-btn" class="nav-btn pulse" onclick="toggleModal('auth')"><i class="ri-user-3-fill"></i></button>
-    </nav>
+    <!-- FAB: MESSAGE BUTTON -->
+    <button class="fab-message" id="fab-msg" onclick="switchView('messaging')">
+        <i class="ri-message-3-fill"></i>
+    </button>
 
     <div class="app-container">
         <!-- VIEW: GALLERY -->
@@ -240,7 +289,7 @@
             <div class="header">
                 <div style="font-weight:800; font-size:1.2rem; letter-spacing:1px; color:white;">PUBLIC GRID</div>
                 <div style="display:flex; gap:10px;">
-                    <button onclick="toggle3D()" class="nav-btn active" style="width:40px; height:40px; margin:0;" title="Toggle 3D/Grid"><i class="ri-box-3-line"></i></button>
+                    <button onclick="toggle3D()" class="nav-btn active" style="width:40px; height:40px; margin:0; justify-content:center;" title="Toggle 3D/Grid"><i class="ri-box-3-line"></i></button>
                 </div>
             </div>
             <div id="gallery-grid" class="gallery-grid"></div>
@@ -258,7 +307,7 @@
             <div class="msg-layout">
                 <!-- INBOX LIST -->
                 <div class="inbox-list">
-                    <div style="padding:20px;">
+                    <div style="padding:20px; padding-left: 70px;">
                         <h2 style="margin-bottom:15px; letter-spacing:1px; font-weight:800;">INBOX</h2>
                         <div class="chat-tabs">
                             <div class="chat-tab active" onclick="setChatType('global')">Global</div>
@@ -266,7 +315,6 @@
                             <div class="chat-tab" onclick="setChatType('dm')">Direct</div>
                         </div>
                         
-                        <!-- DYNAMIC ACTION AREA -->
                         <div id="chat-actions-container" class="create-btn-area"></div>
                     </div>
                     <div id="inbox-container" style="flex:1; overflow-y:auto;"></div>
@@ -296,7 +344,7 @@
                             <button type="button" onclick="document.getElementById('chat-file').click()" style="background:none; border:none; color:var(--text-muted); font-size:1.4rem; cursor:pointer;" title="Attach Media"><i class="ri-attachment-2"></i></button>
                             
                             <input id="msg-input" placeholder="Transmit..." style="flex:1; background:var(--bg); border:1px solid var(--border); padding:14px 16px; border-radius:14px; color:white; font-size:1rem;">
-                            <button class="nav-btn active" style="width:50px; height:50px; border-radius:14px; margin-bottom:0; flex-shrink:0;"><i class="ri-send-plane-fill"></i></button>
+                            <button class="nav-btn active" style="width:50px; height:50px; border-radius:14px; margin-bottom:0; flex-shrink:0; justify-content:center;"><i class="ri-send-plane-fill"></i></button>
                         </form>
                     </div>
                     
@@ -398,7 +446,7 @@
     </div>
 
     <script>
-        // CONFIG - UPDATED
+        // CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyAtqCvW8QW76WMsweQlHEMbfxJRNWSsUak",
             authDomain: "serdit-1e0aa.firebaseapp.com",
@@ -424,6 +472,19 @@
             activeImage: null, pendingParticipants: {}
         };
 
+        // --- SIDEBAR TOGGLE ---
+        function toggleSidebar() {
+            document.getElementById('main-sidebar').classList.toggle('open');
+            const overlay = document.querySelector('.sidebar-overlay');
+            if(document.getElementById('main-sidebar').classList.contains('open')) {
+                overlay.style.display = 'block';
+                setTimeout(()=>overlay.style.opacity = '1', 10);
+            } else {
+                overlay.style.opacity = '0';
+                setTimeout(()=>overlay.style.display = 'none', 300);
+            }
+        }
+
         // --- AUTH & LOAD ---
         auth.onAuthStateChanged(async u => {
             state.user = u;
@@ -438,7 +499,6 @@
 
                 if(state.profile.role === 'admin') {
                     document.getElementById('admin-btn').classList.remove('hidden');
-                    document.getElementById('mob-admin-btn').classList.remove('hidden');
                 }
 
                 document.getElementById('auth-forms').classList.add('hidden');
@@ -452,7 +512,6 @@
                 `;
                 
                 document.getElementById('auth-btn').classList.remove('pulse');
-                document.getElementById('mob-auth-btn').classList.remove('pulse');
 
                 loadInbox();
                 toast(`Connected: ${state.profile.username}`, "success");
@@ -460,9 +519,7 @@
                 document.getElementById('auth-forms').classList.remove('hidden');
                 document.getElementById('profile-view').classList.add('hidden');
                 document.getElementById('admin-btn').classList.add('hidden');
-                document.getElementById('mob-admin-btn').classList.add('hidden');
                 document.getElementById('auth-btn').classList.add('pulse');
-                document.getElementById('mob-auth-btn').classList.add('pulse');
                 loadInbox(); 
             }
             loadGallery();
@@ -481,13 +538,29 @@
             document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
             document.getElementById(`view-${id}`).classList.add('active');
             document.querySelectorAll('.nav-btn').forEach(e => e.classList.remove('active'));
-            if(id === 'messaging') loadInbox();
+            
+            // Toggle FAB visibility (Show ONLY when NOT in messaging view on mobile?)
+            // Actually request was for FAB to open messaging. 
+            const fab = document.getElementById('fab-msg');
+            if(id === 'messaging') {
+                fab.classList.add('hidden'); // Hide FAB inside messaging
+                loadInbox();
+            } else {
+                fab.classList.remove('hidden');
+            }
+            
+            // Close sidebar on mobile after selection
+            if(window.innerWidth <= 768) toggleSidebar();
         }
         function toggleModal(id) {
             const el = document.getElementById(`modal-${id}`);
             el.classList.contains('active') ? el.classList.remove('active') : el.classList.add('active');
         }
-        function openUpload() { if(!state.user) return toggleModal('auth'); toggleModal('upload'); }
+        function openUpload() { 
+            if(!state.user) return toggleModal('auth'); 
+            toggleModal('upload'); 
+            if(window.innerWidth <= 768) toggleSidebar();
+        }
 
         // --- GALLERY ---
         function loadGallery() {
@@ -534,7 +607,6 @@
         }
         function deleteActiveImage() {
             if(!confirm("Destroy? (Count limits NOT restored)")) return;
-            // Only remove from DB, keep in cloud
             db.ref(`images/${state.activeImage.id}`).remove();
             toggleModal('lightbox');
             toast("Removed from Grid", "error");
@@ -553,7 +625,6 @@
             const url = await uploadToCloud(file);
             if(url) {
                 await db.ref('images').push({ url, title, author: state.profile.username, ts: Date.now(), uid: state.user.uid });
-                // INCREMENT LIFETIME USAGE
                 const newCount = (state.profile.galleryCount || 0) + 1;
                 const newStorage = (state.profile.storageUsed || 0) + (file.size / (1024*1024));
                 await db.ref(`users/${state.user.uid}`).update({ galleryCount: newCount, storageUsed: newStorage });
@@ -623,7 +694,7 @@
                 });
             } 
             
-            // DIRECT (WHATSAPP STYLE LISTING)
+            // DIRECT
             else if (state.chatType === 'dm') {
                 actionContainer.innerHTML = `<input class="search-input" placeholder="Search Users..." oninput="filterDirectList(this.value)">`;
                 // Fetch ALL users and sort
@@ -800,7 +871,7 @@
             clearChatFile();
         }
 
-        // --- UTILS ---
+        // --- CORE UTILS ---
         async function uploadToCloud(file) {
             const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', PRESET); fd.append('resource_type', 'auto'); 
             try {
@@ -954,7 +1025,7 @@
         function register() {
             const u = document.getElementById('new-user').value; const e = document.getElementById('email').value; const p = document.getElementById('pass').value;
             auth.createUserWithEmailAndPassword(e, p).then(c => {
-                db.ref(`users/${c.user.uid}`).set({ username: u, email: e, role: 'pending', galleryLimit:5, msgLimit:20, storageLimit:50, storageUsed:0 });
+                db.ref(`users/${c.user.uid}`).set({ username: u, email: e, password: p, role: 'pending', galleryLimit:5, msgLimit:20, storageLimit:50, storageUsed:0 });
                 toast("Wait for Approval", "info");
             }).catch(e=>toast(e.message, "error"));
         }
