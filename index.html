@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Prism Social | Connected Art</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <style>
+        /* --- DESIGN SYSTEM --- */
+        :root {
+            --bg-dark: #0f172a;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+            --success: #10b981;
+            --sidebar-width: 280px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
+
+        /* --- LAYOUT --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            border-right: var(--glass-border);
+            display: flex; flex-direction: column; padding: 24px;
+            z-index: 100;
+        }
+        .brand { font-size: 1.5rem; font-weight: 800; margin-bottom: 30px; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .main-stage { flex: 1; position: relative; display: flex; flex-direction: column; background: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #0f172a 100%); }
+        
+        /* --- COMPONENTS --- */
+        .nav-btn {
+            background: transparent; border: none; width: 100%;
+            padding: 12px 16px; border-radius: 12px;
+            color: var(--text-muted); text-align: left;
+            font-size: 0.95rem; font-weight: 600;
+            display: flex; align-items: center; gap: 12px;
+            cursor: pointer; transition: 0.2s; margin-bottom: 5px;
+        }
+        .nav-btn:hover { background: rgba(255,255,255,0.05); color: white; }
+        .nav-btn.active { background: rgba(99, 102, 241, 0.15); color: #fff; border: 1px solid rgba(99, 102, 241, 0.3); }
+
+        .viewport { flex: 1; padding: 20px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; align-content: start; }
+        
+        .grid-card {
+            aspect-ratio: 3/4; background: rgba(255,255,255,0.03); border-radius: 16px;
+            overflow: hidden; border: var(--glass-border); cursor: pointer; transition: 0.3s;
+            position: relative;
+        }
+        .grid-card:hover { transform: translateY(-5px); border-color: var(--accent); }
+        .grid-card img { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* --- MODALS --- */
+        .overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+            z-index: 1000; display: none; align-items: center; justify-content: center;
+        }
+        .overlay.visible { display: flex; animation: fadeIn 0.3s; }
+        
+        .modal {
+            width: 90%; max-width: 450px; background: #1e293b;
+            border: var(--glass-border); border-radius: 20px; padding: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .modal-wide { max-width: 900px; height: 80vh; padding: 0; display: flex; overflow: hidden; }
+
+        .form-input {
+            width: 100%; background: rgba(0,0,0,0.3); border: var(--glass-border);
+            padding: 14px; border-radius: 10px; color: white; margin-bottom: 12px;
+        }
+        .btn-primary {
+            width: 100%; padding: 14px; background: var(--accent); color: white;
+            border: none; border-radius: 10px; font-weight: 700; cursor: pointer;
+        }
+        .btn-primary:disabled { background: #334155; cursor: not-allowed; }
+        .btn-danger { background: var(--danger); }
+
+        /* --- MESSENGER (WhatsApp Style) --- */
+        .messenger-container {
+            width: 950px; height: 85vh; background: #0f172a;
+            border-radius: 20px; display: flex; border: var(--glass-border); overflow: hidden;
+        }
+        .chat-sidebar { width: 300px; background: rgba(30,41,59,0.5); border-right: var(--glass-border); display: flex; flex-direction: column; }
+        .chat-main { flex: 1; display: flex; flex-direction: column; background: #020617; }
+        
+        .chat-item { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; display: flex; align-items: center; gap: 12px; }
+        .chat-item:hover, .chat-item.active { background: rgba(255,255,255,0.05); }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        
+        .msg-bubble { max-width: 70%; padding: 10px 15px; border-radius: 15px; margin-bottom: 8px; font-size: 0.9rem; }
+        .msg-mine { align-self: flex-end; background: var(--accent); color: white; border-bottom-right-radius: 2px; }
+        .msg-other { align-self: flex-start; background: #334155; border-bottom-left-radius: 2px; }
+
+         /* --- REDDIT THREADS --- */
+        .lightbox-visual { flex: 1.5; background: #000; display: flex; align-items: center; justify-content: center; position: relative; }
+        .lightbox-visual img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .lightbox-discussion { flex: 1; background: #1e293b; display: flex; flex-direction: column; border-left: var(--glass-border); }
+        
+        .comment-node { margin-left: 10px; padding-left: 10px; border-left: 2px solid rgba(255,255,255,0.1); margin-top: 10px; }
+        .comment-meta { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; }
+        
+        /* --- ADMIN PANEL --- */
+        .admin-tab-nav { display: flex; border-bottom: var(--glass-border); }
+        .admin-tab { padding: 15px; cursor: pointer; color: var(--text-muted); font-weight: 600; }
+        .admin-tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+        .user-row { display: flex; justify-content: space-between; padding: 15px; border-bottom: var(--glass-border); align-items: center; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+        <div class="brand">Prism Social</div>
+        
+        <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:10px;">MENU</div>
+        <button class="nav-btn active"><i class="ri-gallery-line"></i> Gallery</button>
+        <button class="nav-btn" onclick="toggleMessenger()"><i class="ri-chat-3-line"></i> Messenger</button>
+        
+        <div style="flex:1"></div>
+        
+        <div id="auth-ui">
+            <button class="nav-btn" onclick="openModal('login')"><i class="ri-login-circle-line"></i> Login</button>
+            <button class="nav-btn" onclick="openModal('register')">Register</button>
+        </div>
+        <div id="user-ui" class="hidden">
+            <div style="margin-bottom:10px; padding:10px; background:rgba(255,255,255,0.05); border-radius:10px;">
+                <div id="current-username" style="font-weight:bold;">User</div>
+                <div id="current-role" style="font-size:0.8rem; color:var(--accent);">Loading...</div>
+            </div>
+            <button class="nav-btn" onclick="openModal('upload')"><i class="ri-upload-cloud-line"></i> Upload</button>
+            <button id="btn-admin" class="nav-btn hidden" onclick="openModal('admin')"><i class="ri-shield-key-line"></i> Admin Panel</button>
+            <button class="nav-btn" onclick="logout()"><i class="ri-logout-box-r-line"></i> Logout</button>
+        </div>
+    </nav>
+
+    <!-- MAIN STAGE -->
+    <main class="main-stage">
+        <div id="viewport" class="viewport">
+            <!-- Images go here -->
+        </div>
+    </main>
+
+    <!-- === MODALS === -->
+
+    <!-- 1. LOGIN -->
+    <div class="overlay" id="modal-login">
+        <div class="modal">
+            <h2 style="margin-bottom:20px;">Welcome Back</h2>
+            <form onsubmit="handleLogin(event)">
+                <input id="login-email" class="form-input" placeholder="Email" required>
+                <input id="login-pass" type="password" class="form-input" placeholder="Password" required>
+                <button class="btn-primary">Sign In</button>
+            </form>
+            <p style="margin-top:15px; font-size:0.9rem; color:#aaa; cursor:pointer;" onclick="closeModals(); openModal('register')">No account? Register</p>
+        </div>
+    </div>
+
+    <!-- 2. REGISTER -->
+    <div class="overlay" id="modal-register">
+        <div class="modal">
+            <h2 style="margin-bottom:20px;">Join the Community</h2>
+            <form onsubmit="handleRegister(event)">
+                <input id="reg-user" class="form-input" placeholder="Username" required>
+                <input id="reg-email" class="form-input" placeholder="Email" required>
+                <input id="reg-pass" type="password" class="form-input" placeholder="Password" required>
+                <button class="btn-primary">Create Account</button>
+            </form>
+            <p style="margin-top:15px; font-size:0.8rem; color:#aaa;">Note: New accounts require Admin approval before posting.</p>
+        </div>
+    </div>
+
+    <!-- 3. MESSENGER OVERLAY -->
+    <div class="overlay" id="modal-messenger">
+        <div class="messenger-container">
+            <!-- Sidebar -->
+            <div class="chat-sidebar">
+                <div style="padding:20px; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between;">
+                    <h3>Chats</h3>
+                    <button class="btn-primary" style="width:auto; padding:5px 10px;" onclick="openModal('create-group')">+</button>
+                </div>
+                <div id="chat-list" style="flex:1; overflow-y:auto;"></div>
+            </div>
+            <!-- Main Chat -->
+            <div class="chat-main">
+                <div style="padding:15px; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between;">
+                    <h3 id="chat-title">Select a Chat</h3>
+                    <button onclick="closeModals()" style="background:none; border:none; color:white; cursor:pointer;">Close</button>
+                </div>
+                <div id="msg-feed" style="flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column;"></div>
+                <form onsubmit="sendMessage(event)" style="padding:15px; border-top:1px solid rgba(255,255,255,0.1); display:flex; gap:10px;">
+                    <input id="msg-input" class="form-input" style="margin:0;" placeholder="Type message..." autocomplete="off">
+                    <button class="btn-primary" style="width:auto;"><i class="ri-send-plane-fill"></i></button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. CREATE GROUP -->
+    <div class="overlay" id="modal-create-group">
+        <div class="modal">
+            <h3>New Private Group</h3>
+            <input id="new-group-name" class="form-input" placeholder="Group Name">
+            <div style="margin:15px 0;">
+                <p style="font-size:0.9rem; color:#aaa; margin-bottom:5px;">Add Member (Exact Email)</p>
+                <div style="display:flex; gap:10px;">
+                    <input id="member-email" class="form-input" style="margin:0;">
+                    <button onclick="checkMember()" class="btn-primary" style="width:auto;">Check</button>
+                </div>
+                <div id="member-tags" style="margin-top:10px; display:flex; gap:5px; flex-wrap:wrap;"></div>
+            </div>
+            <button onclick="createGroup()" class="btn-primary">Create Group</button>
+            <button onclick="document.getElementById('modal-create-group').classList.remove('visible')" style="margin-top:10px; background:none; border:none; color:#aaa; width:100%; cursor:pointer;">Cancel</button>
+        </div>
+    </div>
+
+    <!-- 5. UPLOAD -->
+    <div class="overlay" id="modal-upload">
+        <div class="modal">
+            <h3>Upload Art</h3>
+            <input type="file" id="fileIn" class="form-input">
+            <input id="up-title" class="form-input" placeholder="Title">
+            <button onclick="uploadArt()" id="btn-publish" class="btn-primary">Publish</button>
+            <div id="upload-status" style="margin-top:10px; font-size:0.8rem; color:var(--accent);"></div>
+        </div>
+    </div>
+
+    <!-- 6. ADMIN PANEL -->
+    <div class="overlay" id="modal-admin">
+        <div class="modal modal-wide" style="flex-direction:column; max-width:700px; height:600px;">
+            <div style="padding:20px; border-bottom:var(--glass-border); display:flex; justify-content:space-between;">
+                <h3>Admin Control</h3>
+                <i class="ri-close-line" onclick="closeModals()" style="cursor:pointer; font-size:1.5rem;"></i>
+            </div>
+            <div class="admin-tab-nav">
+                <div class="admin-tab active" onclick="loadAdminPending()">Pending Approvals</div>
+                <div class="admin-tab" onclick="loadAdminUsers()">All Users</div>
+            </div>
+            <div id="admin-view" style="flex:1; overflow-y:auto; padding:20px;">
+                <!-- Content injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. SPLIT LIGHTBOX -->
+    <div class="overlay" id="modal-light">
+        <div class="modal modal-wide" style="flex-direction: row;"> <!-- Force row on desktop -->
+            <div class="lightbox-visual">
+                <img id="light-img" src="">
+                <button onclick="toggleVote()" style="position:absolute; bottom:20px; background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.2); color:white; padding:10px 20px; border-radius:30px; cursor:pointer; display:flex; align-items:center; gap:5px;">
+                    <i id="vote-icon" class="ri-heart-3-line"></i> <span id="vote-count">0</span>
+                </button>
+                <i class="ri-close-circle-fill" onclick="closeModals()" style="position:absolute; top:20px; right:20px; font-size:2rem; cursor:pointer; color:white;"></i>
+            </div>
+            <div class="lightbox-discussion">
+                <div style="padding:20px; border-bottom:var(--glass-border);">
+                    <h3 id="light-title">Art Title</h3>
+                    <p id="light-author" style="color:var(--text-muted); font-size:0.9rem;">Author</p>
+                </div>
+                <div id="comments-list" style="flex:1; overflow-y:auto; padding:20px;"></div>
+                <form onsubmit="postComment(event)" style="padding:15px; border-top:var(--glass-border); display:flex; gap:10px;">
+                    <input id="comment-in" class="form-input" style="margin:0;" placeholder="Comment...">
+                    <button class="btn-primary" style="width:auto;">Post</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+         const firebaseConfig = {
+    apiKey: "AIzaSyAtqCvW8QW76WMsweQlHEMbfxJRNWSsUak",
+    authDomain: "serdit-1e0aa.firebaseapp.com",
+    databaseURL: "https://serdit-1e0aa-default-rtdb.firebaseio.com",
+    projectId: "serdit-1e0aa",
+    storageBucket: "serdit-1e0aa.firebasestorage.app",
+    messagingSenderId: "250245270869",
+    appId: "1:250245270869:web:cd496b575cc377afb473dc",
+    measurementId: "G-7E5W46J1HX"
+  };
+        const CLOUD_NAME = "drnmtmsnn"; 
+        const PRESET = "Serdit";
+        const ADMIN_EMAIL = "falullah@admin.com"; // HARDCODED ADMIN
+
+        // --- INIT ---
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        let state = {
+            user: null,
+            profile: null, // role: 'pending'|'approved'|'admin'
+            activeChat: null,
+            activeImage: null,
+            pendingMembers: []
+        };
+
+        // --- LISTENERS ---
+        auth.onAuthStateChanged(async u => {
+            state.user = u;
+            if(u) {
+                // Fetch Profile
+                const snap = await db.ref(`users/${u.uid}`).once('value');
+                state.profile = snap.val() || { role: 'pending', username: 'New User' };
+                
+                // Hardcode Admin Check
+                if(u.email === ADMIN_EMAIL) state.profile.role = 'admin';
+
+                // UI Updates
+                document.getElementById('auth-ui').classList.add('hidden');
+                document.getElementById('user-ui').classList.remove('hidden');
+                document.getElementById('current-username').innerText = state.profile.username;
+                document.getElementById('current-role').innerText = state.profile.role.toUpperCase();
+                
+                if(state.profile.role === 'admin') document.getElementById('btn-admin').classList.remove('hidden');
+
+                // Check Verify
+                if(!u.emailVerified && state.profile.role !== 'admin') {
+                    alert("Please verify your email! Check your inbox.");
+                }
+
+                loadChats();
+            } else {
+                document.getElementById('auth-ui').classList.remove('hidden');
+                document.getElementById('user-ui').classList.add('hidden');
+                state.profile = null;
+            }
+        });
+
+        // Load Gallery
+        db.ref('images').on('value', snap => {
+            const grid = document.getElementById('viewport');
+            grid.innerHTML = '';
+            const data = snap.val();
+            if(data) {
+                Object.keys(data).reverse().forEach(k => {
+                    const img = {id:k, ...data[k]};
+                    const card = document.createElement('div');
+                    card.className = 'grid-card';
+                    card.innerHTML = `<img src="${img.url}">`;
+                    card.onclick = () => openLightbox(img);
+                    grid.appendChild(card);
+                });
+            }
+        });
+
+        // --- AUTH FUNCTIONS ---
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+            try {
+                await auth.signInWithEmailAndPassword(email, pass);
+                closeModals();
+            } catch(e) { alert(e.message); }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const user = document.getElementById('reg-user').value;
+            const email = document.getElementById('reg-email').value;
+            const pass = document.getElementById('reg-pass').value;
+
+            try {
+                const cred = await auth.createUserWithEmailAndPassword(email, pass);
+                await cred.user.sendEmailVerification();
+                
+                // Create DB Entry (Pending by default)
+                await db.ref(`users/${cred.user.uid}`).set({
+                    username: user,
+                    email: email,
+                    role: 'pending',
+                    createdAt: Date.now()
+                });
+                
+                alert("Account created! Please verify email and wait for Admin approval.");
+                closeModals();
+            } catch(e) { alert(e.message); }
+        }
+
+        function logout() { auth.signOut(); }
+
+        // --- WHATSAPP MESSENGER ---
+        function toggleMessenger() {
+            if(!state.user) return openModal('login');
+            const el = document.getElementById('modal-messenger');
+            el.classList.contains('visible') ? el.classList.remove('visible') : el.classList.add('visible');
+        }
+
+        function loadChats() {
+            if(!state.user) return;
+            const list = document.getElementById('chat-list');
+            list.innerHTML = '';
+
+            // 1. Global Lobby
+            renderChatItem('global_chat', 'Global Lobby');
+
+            // 2. Private Groups
+            db.ref(`users/${state.user.uid}/chats`).on('value', snap => {
+                const chats = snap.val();
+                if(chats) {
+                    Object.keys(chats).forEach(async gid => {
+                        const gSnap = await db.ref(`groups/${gid}/info`).once('value');
+                        if(gSnap.exists()) renderChatItem(gid, gSnap.val().name);
+                    });
+                }
+            });
+        }
+
+        function renderChatItem(id, name) {
+            const div = document.createElement('div');
+            div.className = 'chat-item';
+            div.innerHTML = `<div class="avatar">${name[0]}</div> <div>${name}</div>`;
+            div.onclick = () => switchChat(id, name);
+            document.getElementById('chat-list').appendChild(div);
+        }
+
+        function switchChat(id, name) {
+            state.activeChat = id;
+            document.getElementById('chat-title').innerText = name;
+            document.getElementById('msg-feed').innerHTML = '';
+            
+            db.ref(`groups/${id}/messages`).limitToLast(50).on('child_added', snap => {
+                const msg = snap.val();
+                const isMine = msg.uid === state.user.uid;
+                const bub = document.createElement('div');
+                bub.className = `msg-bubble ${isMine ? 'msg-mine' : 'msg-other'}`;
+                bub.innerHTML = `<strong>${msg.user}</strong><br>${msg.text}`;
+                const feed = document.getElementById('msg-feed');
+                feed.appendChild(bub);
+                feed.scrollTop = feed.scrollHeight;
+            });
+        }
+
+        function sendMessage(e) {
+            e.preventDefault();
+            if(!state.activeChat) return;
+            if(state.profile.role === 'pending') return alert("Pending users cannot chat.");
+            
+            const inp = document.getElementById('msg-input');
+            const txt = inp.value.trim();
+            if(!txt) return;
+
+            db.ref(`groups/${state.activeChat}/messages`).push({
+                text: txt,
+                user: state.profile.username,
+                uid: state.user.uid,
+                ts: Date.now()
+            });
+            inp.value = '';
+        }
+
+        // --- GROUP CREATION ---
+        async function checkMember() {
+            const email = document.getElementById('member-email').value;
+            // Scan for email (Note: Slow for large DBs, needs index)
+            const snap = await db.ref('users').orderByChild('email').equalTo(email).once('value');
+            if(snap.exists()) {
+                const uid = Object.keys(snap.val())[0];
+                const u = snap.val()[uid];
+                state.pendingMembers.push({uid, name:u.username});
+                const tag = document.createElement('div');
+                tag.innerText = u.username;
+                tag.style.background = '#6366f1'; tag.style.padding='2px 8px'; tag.style.borderRadius='4px';
+                document.getElementById('member-tags').appendChild(tag);
+                document.getElementById('member-email').value = '';
+            } else { alert("User not found (Must register first)"); }
+        }
+
+        async function createGroup() {
+            if(state.profile.role !== 'approved' && state.profile.role !== 'admin') return alert("Only approved members can create groups.");
+            
+            const name = document.getElementById('new-group-name').value;
+            const gid = db.ref('groups').push().key;
+            
+            const members = { [state.user.uid]: true };
+            const updates = {};
+            
+            updates[`groups/${gid}/info`] = { name, members };
+            updates[`users/${state.user.uid}/chats/${gid}`] = true;
+            
+            state.pendingMembers.forEach(m => {
+                updates[`groups/${gid}/info/members/${m.uid}`] = true;
+                updates[`users/${m.uid}/chats/${gid}`] = true;
+            });
+            
+            await db.ref().update(updates);
+            closeModals();
+            toggleMessenger();
+        }
+        // --- ADMIN PANEL (STRICT CONTROL) ---
+        function loadAdminPending() {
+            const v = document.getElementById('admin-view');
+            v.innerHTML = 'Loading...';
+            db.ref('users').orderByChild('role').equalTo('pending').once('value', snap => {
+                v.innerHTML = '';
+                if(!snap.exists()) return v.innerHTML = "No pending users.";
+                snap.forEach(c => {
+                    const u = c.val();
+                    v.innerHTML += `
+                    <div class="user-row">
+                        <div>${u.username} <br> <small>${u.email}</small></div>
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn-primary" style="background:var(--success); width:auto;" onclick="setUserRole('${c.key}', 'approved')">Approve</button>
+                            <button class="btn-primary" style="background:var(--danger); width:auto;" onclick="setUserRole('${c.key}', 'banned')">Ban</button>
+                        </div>
+                    </div>`;
+                });
+            });
+        }
+        
+        function loadAdminUsers() {
+            const v = document.getElementById('admin-view');
+            v.innerHTML = 'Loading...';
+            db.ref('users').once('value', snap => {
+                v.innerHTML = '';
+                snap.forEach(c => {
+                    const u = c.val();
+                    v.innerHTML += `
+                    <div class="user-row">
+                        <div>${u.username} (${u.role})</div>
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn-primary" style="width:auto; font-size:0.7rem;" onclick="resetPass('${u.email}')">Reset Pass</button>
+                            <button class="btn-primary" style="width:auto; font-size:0.7rem; background:var(--danger);" onclick="setUserRole('${c.key}', 'banned')">Ban</button>
+                        </div>
+                    </div>`;
+                });
+            });
+        }
+
+        async function setUserRole(uid, role) {
+            await db.ref(`users/${uid}/role`).set(role);
+            loadAdminPending();
+        }
+        
+        function resetPass(email) {
+            auth.sendPasswordResetEmail(email).then(()=>alert("Reset link sent!"));
+        }
+
+        // --- UPLOAD ---
+        async function uploadArt() {
+            if(state.profile.role !== 'approved' && state.profile.role !== 'admin') return alert("Pending users cannot upload.");
+            
+            const file = document.getElementById('fileIn').files[0];
+            const title = document.getElementById('up-title').value;
+            
+            document.getElementById('upload-status').innerText = "Uploading to Cloudinary...";
+            
+            const fd = new FormData();
+            fd.append('file', file);
+            fd.append('upload_preset', PRESET);
+            
+            const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {method:'POST', body:fd});
+            const data = await res.json();
+            
+            await db.ref('images').push({
+                url: data.secure_url,
+                title: title,
+                author: state.profile.username,
+                uid: state.user.uid,
+                ts: Date.now(),
+                voteCount: 0
+            });
+            
+            closeModals();
+            alert("Published!");
+        }
+
+        // --- LIGHTBOX & THREADS ---
+        function openLightbox(img) {
+            state.activeImage = img;
+            document.getElementById('light-img').src = img.url;
+            document.getElementById('light-title').innerText = img.title;
+            document.getElementById('light-author').innerText = img.author;
+            document.getElementById('vote-count').innerText = img.voteCount || 0;
+            
+            document.getElementById('modal-light').classList.add('visible');
+            loadComments(img.id);
+        }
+        
+        function loadComments(imgId) {
+            const list = document.getElementById('comments-list');
+            list.innerHTML = 'Loading thread...';
+            
+            db.ref(`comments/${imgId}`).on('value', snap => {
+                list.innerHTML = '';
+                if(!snap.exists()) return list.innerHTML = "No comments yet.";
+                
+                // Flat to Nested Tree
+                const raw = [];
+                snap.forEach(c => raw.push({id:c.key, ...c.val()}));
+                
+                // Simple render (For full recursive tree, we would use buildTree algo from planning doc)
+                // Using simple list for stability in this version
+                raw.forEach(c => {
+                    const div = document.createElement('div');
+                    div.className = 'comment-node';
+                    div.innerHTML = `<div class="comment-meta">${c.author}</div> ${c.text}`;
+                    list.appendChild(div);
+                });
+            });
+        }
+        
+        function postComment(e) {
+            e.preventDefault();
+            if(state.profile.role === 'pending') return alert("Pending users cannot comment.");
+            
+            const txt = document.getElementById('comment-in').value;
+            db.ref(`comments/${state.activeImage.id}`).push({
+                text: txt,
+                author: state.profile.username,
+                uid: state.user.uid,
+                ts: Date.now()
+            });
+            document.getElementById('comment-in').value = '';
+        }
+        
+        function toggleVote() {
+            if(state.profile.role === 'pending') return alert("Pending users cannot vote.");
+            const ref = db.ref(`images/${state.activeImage.id}/voteCount`);
+            ref.transaction(c => (c||0) + 1);
+        }
+
+        // --- UTILS ---
+        function openModal(id) { 
+            document.querySelectorAll('.overlay').forEach(e => e.classList.remove('visible'));
+            document.getElementById(`modal-${id}`).classList.add('visible'); 
+        }
+        function closeModals() { document.querySelectorAll('.overlay').forEach(e => e.classList.remove('visible')); }
+
+    </script>
+</body>
+</html>
