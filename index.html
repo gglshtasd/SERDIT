@@ -3,17 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SERDIT | Final</title>
+    <title>SERDIT | Definitive</title>
     
+    <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
     <style>
-        /* --- THEME: DEEP VOID --- */
+        /* --- THEME: DEEP VOID X --- */
         :root {
             --bg: #050507;
             --surface: #0e0e14;
@@ -25,6 +27,7 @@
             --success: #10b981;
             --text: #f1f5f9;
             --muted: #64748b;
+            --nav-height: 70px;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
@@ -41,7 +44,7 @@
         /* --- TOASTS --- */
         #toast-container { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; width: 90%; max-width: 300px; }
         .toast {
-            background: rgba(20, 20, 30, 0.95); backdrop-filter: blur(15px);
+            background: rgba(14, 14, 20, 0.95); backdrop-filter: blur(15px);
             border: 1px solid var(--border); padding: 12px 20px; border-radius: 12px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.6); font-size: 0.9rem;
             display: flex; align-items: center; gap: 10px; animation: slideUp 0.3s ease;
@@ -56,7 +59,7 @@
         }
         
         .mobile-nav {
-            display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: 75px;
+            display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: var(--nav-height);
             background: rgba(14, 14, 20, 0.98); backdrop-filter: blur(20px);
             border-top: 1px solid var(--border); z-index: 100;
             justify-content: space-around; align-items: center;
@@ -149,7 +152,7 @@
             z-index: 200; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s;
         }
         .modal-overlay.active { display: flex; opacity: 1; }
-        .modal-card { width: 95%; max-width: 480px; background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 35px; max-height: 90vh; display: flex; flex-direction: column; transform: scale(0.95); transition: transform 0.3s; position: relative; }
+        .modal-card { width: 95%; max-width: 500px; background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 35px; max-height: 90vh; display: flex; flex-direction: column; transform: scale(0.95); transition: transform 0.3s; position: relative; }
         .modal-overlay.active .modal-card { transform: scale(1); }
         
         .modal-close-x {
@@ -164,11 +167,19 @@
         .btn-main { width: 100%; padding: 16px; background: var(--text); color: black; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: 0.2s; }
         .hidden { display: none !important; }
         
+        /* --- ADMIN PANEL --- */
+        .admin-row { padding: 15px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+        .status-badge { padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; text-transform: uppercase; font-weight: bold; }
+        .status-pending { background: rgba(255, 165, 0, 0.2); color: orange; }
+        .status-approved { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .admin-actions { display: flex; gap: 10px; align-items: center; margin-top: 5px; }
+        .limit-input { background: var(--bg); border: 1px solid var(--border); color: white; padding: 5px; width: 60px; border-radius: 6px; text-align: center; }
+
         /* --- MOBILE --- */
         @media (max-width: 768px) {
             .sidebar { display: none; }
             .mobile-nav { display: flex; }
-            .app-container { height: calc(100vh - 75px); }
+            .app-container { height: calc(100vh - var(--nav-height)); }
             .msg-layout { position: relative; }
             .inbox-list { width: 100%; }
             .chat-area { position: absolute; inset: 0; transform: translateX(100%); transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 50; }
@@ -183,8 +194,7 @@
         .controls-3d { position: absolute; bottom: 30px; display: flex; gap: 20px; z-index: 10; width: 100%; justify-content: center; }
         .ctrl-btn { width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 1px solid var(--border); color: white; cursor: pointer; backdrop-filter: blur(5px); }
         
-        /* Preview */
-        .preview-box { width: 100%; height: 200px; background: #000; display: flex; align-items: center; justify-content: center; border-radius: 12px; margin-bottom: 20px; overflow: hidden; border: 1px solid var(--border); }
+        .preview-box { width: 100%; height: 100px; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; border-radius: 8px; margin-top: 10px; overflow: hidden; border: 1px solid var(--border); }
         .preview-box img, .preview-box video { max-width: 100%; max-height: 100%; }
     </style>
 </head>
@@ -192,9 +202,9 @@
 
     <div id="toast-container"></div>
 
-    <!-- SIDEBAR -->
+    <!-- SIDEBAR (PC) -->
     <nav class="sidebar">
-        <div style="font-weight:900; color:var(--neon-b); font-size:1.5rem; margin-bottom:40px; cursor:default;">S9</div>
+        <div style="font-weight:900; color:var(--neon-b); font-size:1.5rem; margin-bottom:40px; cursor:default;">S10</div>
         <button id="nav-gallery" class="nav-btn active" onclick="switchView('gallery')" title="Gallery"><i class="ri-gallery-view-2"></i></button>
         <button id="nav-msg" class="nav-btn" onclick="switchView('messaging')" title="Comms"><i class="ri-chat-4-fill"></i></button>
         <button class="nav-btn" onclick="openUpload()" title="Upload"><i class="ri-upload-cloud-2-fill"></i></button>
@@ -258,10 +268,16 @@
                     
                     <!-- INPUT AREA -->
                     <div id="msg-input-area" style="padding:15px; border-top:1px solid var(--border); background:var(--surface);">
+                        <!-- FILE PREVIEW CONTAINER -->
+                        <div id="chat-file-preview" style="display:none; margin-bottom:10px; position:relative; width:fit-content;">
+                            <img id="preview-img" style="max-height:100px; border-radius:8px; border:1px solid var(--border);">
+                            <button onclick="clearChatFile()" style="position:absolute; top:-5px; right:-5px; background:var(--danger); border:none; color:white; border-radius:50%; width:20px; height:20px; cursor:pointer;">&times;</button>
+                        </div>
+
                         <form onsubmit="sendMessage(event)" style="display:flex; gap:10px; align-items:center;">
-                            <!-- File Input now accepts specific types -->
-                            <input type="file" id="chat-file" style="display:none;" onchange="handleFileSelect()" accept="image/*,video/*,audio/*,application/pdf">
-                            <button type="button" onclick="document.getElementById('chat-file').click()" style="background:none; border:none; color:var(--muted); font-size:1.4rem;"><i class="ri-attachment-2"></i></button>
+                            <!-- Improved File Input -->
+                            <input type="file" id="chat-file" style="display:none;" onchange="handleChatFileSelect()" accept="image/*,video/*,audio/*,application/pdf">
+                            <button type="button" onclick="document.getElementById('chat-file').click()" style="background:none; border:none; color:var(--muted); font-size:1.4rem; cursor:pointer;" title="Attach Media"><i class="ri-attachment-2"></i></button>
                             
                             <select id="msg-timer" style="background:var(--bg); color:var(--danger); border:1px solid var(--border); border-radius:8px; padding:5px; font-size:0.8rem; cursor:pointer;">
                                 <option value="0">∞</option>
@@ -269,10 +285,9 @@
                                 <option value="172800000">48h</option>
                             </select>
                             
-                            <input id="msg-input" placeholder="Transmit..." style="flex:1; background:var(--bg); border:1px solid var(--border); padding:12px 15px; border-radius:12px; color:white;">
+                            <input id="msg-input" placeholder="Message..." style="flex:1; background:var(--bg); border:1px solid var(--border); padding:12px 15px; border-radius:12px; color:white;">
                             <button class="nav-btn active" style="width:45px; height:45px; border-radius:12px; margin-bottom:0;"><i class="ri-send-plane-fill"></i></button>
                         </form>
-                        <div id="file-preview" style="font-size:0.75rem; color:var(--neon-b); margin-top:5px; padding-left:10px;"></div>
                     </div>
                     
                     <!-- GUEST LOCK -->
@@ -366,20 +381,17 @@
 
     <script>
         // CONFIG
-                 const firebaseConfig = {
-    apiKey: "AIzaSyAtqCvW8QW76WMsweQlHEMbfxJRNWSsUak",
-    authDomain: "serdit-1e0aa.firebaseapp.com",
-    databaseURL: "https://serdit-1e0aa-default-rtdb.firebaseio.com",
-    projectId: "serdit-1e0aa",
-    storageBucket: "serdit-1e0aa.firebasestorage.app",
-    messagingSenderId: "250245270869",
-    appId: "1:250245270869:web:cd496b575cc377afb473dc",
-    measurementId: "G-7E5W46J1HX"
-  };
-        const CLOUD_NAME = "drnmtmsnn"; 
-        const PRESET = "se_reddit";
-        const ADMIN_EMAIL = "falullah@admin.com"; 
-
+        const firebaseConfig = {
+            apiKey: "AIzaSyD00WLBEu2P1BpaHEazFIkhVhXV2F3Rpio",
+            authDomain: "niggallery.firebaseapp.com",
+            projectId: "niggallery",
+            storageBucket: "niggallery.firebasestorage.app",
+            messagingSenderId: "413029665196",
+            appId: "1:413029665196:web:d3386646b22873a0651209"
+        };
+        const CLOUD_NAME = "drkb1dook"; 
+        const PRESET = "niggallery_upload";
+        const ADMIN_EMAIL = "falullah@admin.com";
 
         // INIT
         firebase.initializeApp(firebaseConfig);
@@ -509,7 +521,6 @@
             state.activeImage = {id, uid};
             document.getElementById('lb-img').src=url; 
             const delBtn = document.getElementById('lb-del-btn');
-            // Allow delete if Owner OR Admin
             if(state.user && (uid === state.user.uid || state.profile.role === 'admin')) delBtn.classList.remove('hidden');
             else delBtn.classList.add('hidden');
             toggleModal('lightbox'); 
@@ -528,14 +539,15 @@
             if(file) {
                 const reader = new FileReader();
                 reader.onload = e => {
-                    area.innerHTML = `<img src="${e.target.result}" style="max-height:200px; max-width:100%; border-radius:8px;">`;
+                    const type = file.type.split('/')[0];
+                    if(type === 'image') area.innerHTML = `<img src="${e.target.result}" style="max-height:200px; max-width:100%; border-radius:8px;">`;
+                    else if (type === 'video') area.innerHTML = `<video src="${e.target.result}" style="max-height:200px; max-width:100%;" controls></video>`;
                 };
                 reader.readAsDataURL(file);
             }
         }
 
         async function uploadGallery() {
-            // USER APPROVAL CHECK
             if(state.profile.role !== 'approved' && state.profile.role !== 'admin') return toast("Account Pending Approval", "error");
 
             const file = document.getElementById('gal-file').files[0];
@@ -563,14 +575,12 @@
             const list = document.getElementById('inbox-container');
             list.innerHTML = '';
             
-            // GLOBAL IS ALWAYS VISIBLE
             if(state.chatType === 'global') {
                 list.innerHTML = `<div class="inbox-item" onclick="openChat('global_messages', 'Global Chat')"><div class="avatar">G</div> <div style="font-weight:bold;">Global Chat</div></div>`;
                 if(state.activeChat === 'global_messages') openChat('global_messages', 'Global Chat');
                 return;
             }
 
-            // GUEST LOCK
             if(!state.user) {
                 list.innerHTML = `<div style="padding:30px; text-align:center; color:var(--muted);">Login to access ${state.chatType.toUpperCase()} channels.</div>`;
                 return;
@@ -613,7 +623,6 @@
             document.getElementById('msg-feed').innerHTML = '';
             document.getElementById('chat-stage').classList.add('open');
             
-            // GUEST LOCK INPUT
             const inputArea = document.getElementById('msg-input-area');
             const guestLock = document.getElementById('guest-input-lock');
             
@@ -625,7 +634,6 @@
                 guestLock.classList.add('hidden');
             }
 
-            // Group Delete Button
             const delBtn = document.getElementById('btn-del-group');
             if(state.user && state.chatType === 'group') {
                 const info = await db.ref(`groups/${id}/info`).once('value');
@@ -682,7 +690,6 @@
             const time = new Date(msg.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
             content += `<span class="ts-tag">${time}</span>`;
 
-            // Delete Button (Owner or Admin)
             if(state.user && (msg.uid === state.user.uid || state.profile.role === 'admin')) {
                 content += `<button class="msg-del-btn" onclick="deleteMsg('${rootPath}', '${key}')"><i class="ri-delete-bin-line"></i></button>`;
             }
@@ -695,16 +702,33 @@
             toast("Message Retracted");
         }
 
-        function handleFileSelect() {
+        function handleChatFileSelect() {
             state.uploadFile = document.getElementById('chat-file').files[0];
-            document.getElementById('file-preview').innerText = state.uploadFile ? `Attached: ${state.uploadFile.name}` : "";
+            const area = document.getElementById('chat-file-preview');
+            const img = document.getElementById('preview-img');
+            
+            if(state.uploadFile) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const type = state.uploadFile.type.split('/')[0];
+                    if(type === 'image') img.src = e.target.result;
+                    else img.src = ''; // Can add generic icon for other types
+                    area.style.display = 'block';
+                };
+                reader.readAsDataURL(state.uploadFile);
+            }
+        }
+        
+        function clearChatFile() {
+            state.uploadFile = null;
+            document.getElementById('chat-file').value = '';
+            document.getElementById('chat-file-preview').style.display = 'none';
         }
 
         async function sendMessage(e) {
             e.preventDefault();
             if(!state.activeChat || !state.user) return; 
             
-            // USER APPROVAL CHECK FOR CHAT
             if(state.profile.role !== 'approved' && state.profile.role !== 'admin') return toast("Account Pending Approval", "error");
 
             const txt = document.getElementById('msg-input').value;
@@ -732,9 +756,7 @@
             await db.ref(root).push(payload);
             
             document.getElementById('msg-input').value = '';
-            state.uploadFile = null;
-            document.getElementById('chat-file').value = '';
-            document.getElementById('file-preview').innerText = '';
+            clearChatFile();
         }
 
         // --- CORE UTILS ---
@@ -796,8 +818,14 @@
                         const badge = u.role === 'pending' ? `<span class="status-badge status-pending">PENDING</span>` : `<span class="status-badge status-approved">CITIZEN</span>`;
                         info = `<div>${badge} <b style="color:var(--neon-b)">${u.username}</b><br><span style="font-size:0.75rem; color:gray">${u.email} // ${u.password}</span></div>`;
                         
-                        let actions = `<div>`;
-                        if(u.role === 'pending') actions += `<button onclick="approveUser('${c.key}')" class="btn-main" style="width:auto; padding:5px 10px; margin:0; background:var(--success); color:white;">Approve</button> `;
+                        let actions = `<div class="admin-actions">`;
+                        if(u.role === 'pending') {
+                            actions += `<input id="limit-${c.key}" class="limit-input" value="50" placeholder="MB">`;
+                            actions += `<button onclick="approveUser('${c.key}')" class="btn-main" style="width:auto; padding:5px 10px; margin:0; background:var(--success); color:white;">Approve</button> `;
+                        } else {
+                            actions += `<input id="limit-${c.key}" class="limit-input" value="${u.storageLimit}" placeholder="MB">`;
+                            actions += `<button onclick="updateLimit('${c.key}')" class="btn-main" style="width:auto; padding:5px 10px; margin:0; background:var(--surface); border:1px solid var(--border); color:white;">Update</button>`;
+                        }
                         actions += `<button onclick="banUser('${c.key}')" style="color:red; background:none; border:none; margin-left:10px;">BAN</button></div>`;
                         row.innerHTML = info + actions;
                     } else {
@@ -808,8 +836,21 @@
                 });
             });
         }
+        
         function spyChat(id, type) { toggleModal('admin'); state.chatType = type === 'dms' ? 'dm' : 'group'; openChat(id, "GOD MODE: " + id); }
-        window.approveUser = (uid) => { db.ref(`users/${uid}/role`).set('approved'); toast("User Approved", "success"); renderAdmin('users'); };
+        
+        window.approveUser = (uid) => { 
+            const limit = parseInt(document.getElementById(`limit-${uid}`).value) || 50;
+            db.ref(`users/${uid}`).update({ role: 'approved', storageLimit: limit });
+            toast("User Approved", "success"); renderAdmin('users'); 
+        };
+        
+        window.updateLimit = (uid) => {
+            const limit = parseInt(document.getElementById(`limit-${uid}`).value) || 50;
+            db.ref(`users/${uid}/storageLimit`).set(limit);
+            toast("Limit Updated", "success");
+        };
+
         window.banUser = (uid) => { db.ref(`users/${uid}/role`).set('banned'); toast("User Banned", "error"); renderAdmin('users'); };
 
         // --- AUTH ---
@@ -826,3 +867,5 @@
     </script>
 </body>
 </html>
+
+
