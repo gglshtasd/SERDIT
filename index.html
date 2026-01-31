@@ -2,33 +2,38 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SERDIT | Secure</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>SERDIT | Final</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
     <style>
-        /* --- THEME: SECURE VOID --- */
+        /* --- THEME: DEEP VOID FINAL --- */
         :root {
             --bg: #020203;
             --surface: #0a0a0f;
             --surface-hover: #12121a;
             --border: #1f1f2e;
+            --active: #2a2a3d;
             
             --neon-p: #a855f7;
             --neon-b: #3b82f6;
+            --accent: #6366f1;
+            
             --danger: #ef4444;
             --success: #10b981;
+            --warning: #f59e0b;
             
             --text: #f8fafc;
             --text-muted: #64748b;
+            
             --nav-height: 65px;
+            --radius: 16px;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
@@ -42,7 +47,7 @@
             display: flex;
         }
 
-        /* --- UI COMPONENTS --- */
+        /* --- TOASTS --- */
         #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 11000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; width: 90%; max-width: 350px; }
         .toast {
             background: rgba(10, 10, 15, 0.95); backdrop-filter: blur(12px);
@@ -53,10 +58,24 @@
         .toast.success i { color: var(--success); } .toast.error i { color: var(--danger); }
         @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        .sidebar { width: 80px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding: 25px 0; z-index: 50; }
-        .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: var(--nav-height); background: rgba(10, 10, 15, 0.98); backdrop-filter: blur(20px); border-top: 1px solid var(--border); z-index: 100; justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom); }
+        /* --- LAYOUT --- */
+        .sidebar {
+            width: 80px; background: var(--surface); border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; align-items: center; padding: 25px 0; z-index: 50;
+        }
+        
+        .mobile-nav {
+            display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: var(--nav-height);
+            background: rgba(10, 10, 15, 0.98); backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border); z-index: 100;
+            justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom);
+        }
 
-        .nav-btn { width: 48px; height: 48px; border-radius: 14px; border: none; background: transparent; color: var(--text-muted); font-size: 1.4rem; cursor: pointer; transition: 0.2s ease; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; position: relative; }
+        .nav-btn {
+            width: 48px; height: 48px; border-radius: 14px; border: none; background: transparent;
+            color: var(--text-muted); font-size: 1.4rem; cursor: pointer; transition: 0.2s ease;
+            display: flex; align-items: center; justify-content: center; margin-bottom: 12px; position: relative;
+        }
         .nav-btn:hover { color: white; background: var(--surface-hover); }
         .nav-btn.active { color: var(--neon-b); background: rgba(59, 130, 246, 0.1); }
         .nav-btn.pulse { animation: pulse 2s infinite; color: var(--neon-p); }
@@ -67,80 +86,131 @@
         .view.active { display: flex; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* GALLERY */
-        .header { height: 70px; padding: 0 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(2, 2, 3, 0.8); backdrop-filter: blur(10px); z-index: 20; }
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; padding: 25px; overflow-y: auto; align-content: start; }
-        .art-card { aspect-ratio: 3/4; border-radius: 16px; overflow: hidden; position: relative; background: var(--surface); border: 1px solid var(--border); cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        /* --- GALLERY VIEW --- */
+        .header {
+            height: 70px; padding: 0 25px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(2, 2, 3, 0.8); backdrop-filter: blur(10px); z-index: 20;
+        }
+
+        .gallery-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
+            gap: 20px; padding: 25px; overflow-y: auto; align-content: start;
+        }
+        
+        .art-card {
+            aspect-ratio: 3/4; border-radius: var(--radius); overflow: hidden; position: relative;
+            background: var(--surface); border: 1px solid var(--border); cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
         .art-card:hover { transform: translateY(-5px); border-color: var(--neon-b); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .art-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
         .art-card:hover img { transform: scale(1.05); }
-        .art-info { position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); transform: translateY(100%); transition: transform 0.3s; }
+        .art-info {
+            position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            transform: translateY(100%); transition: transform 0.3s;
+        }
         .art-card:hover .art-info { transform: translateY(0); }
 
-        .gallery-3d { display: none; perspective: 1500px; overflow: hidden; height: 100%; align-items: center; justify-content: center; position: relative; }
+        /* 3D Mode */
+        .gallery-3d {
+            display: none; perspective: 1500px; overflow: hidden;
+            height: 100%; align-items: center; justify-content: center; position: relative;
+        }
         .gallery-3d.active { display: flex; }
         .carousel { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.6s; display: flex; align-items: center; justify-content: center;}
-        .card-3d { position: absolute; width: 300px; height: 450px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.8); -webkit-box-reflect: below 10px linear-gradient(transparent, rgba(0,0,0,0.4)); }
+        .card-3d {
+            position: absolute; width: 300px; height: 450px; background: var(--surface);
+            border: 1px solid var(--border); border-radius: 20px; overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8); -webkit-box-reflect: below 10px linear-gradient(transparent, rgba(0,0,0,0.4));
+        }
         .card-3d img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* MESSAGING */
+        /* --- MESSAGING VIEW --- */
         .msg-layout { display: flex; height: 100%; }
         .inbox-list { width: 350px; border-right: 1px solid var(--border); background: var(--surface); display: flex; flex-direction: column; }
         .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--bg); position: relative; }
+        
         .chat-tabs { display: flex; padding: 15px; gap: 8px; border-bottom: 1px solid var(--border); }
         .chat-tab { flex: 1; padding: 10px; background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; text-align: center; font-size: 0.85rem; font-weight: 600; transition: 0.2s; }
-        .chat-tab.active { background: var(--neon-b); color: white; border-color: var(--neon-b); }
+        .chat-tab.active { background: var(--neon-b); color: white; border-color: var(--neon-b); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+
         .inbox-item { padding: 18px 25px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; gap: 15px; transition: 0.2s; }
         .inbox-item:hover { background: var(--surface-hover); }
         .avatar { width: 45px; height: 45px; border-radius: 14px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--neon-p); font-size: 1.1rem; border: 1px solid var(--border); }
 
+        /* Bubbles */
         .bubble { max-width: 70%; padding: 12px 18px; border-radius: 18px; font-size: 0.95rem; margin-bottom: 12px; line-height: 1.5; position: relative; word-wrap: break-word; }
-        .bubble.mine { align-self: flex-end; background: var(--neon-b); color: white; border-bottom-right-radius: 4px; }
+        .bubble.mine { align-self: flex-end; background: var(--neon-b); color: white; border-bottom-right-radius: 4px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15); }
         .bubble.theirs { align-self: flex-start; background: var(--surface); border: 1px solid var(--border); border-bottom-left-radius: 4px; color: var(--text); }
         .bubble.deleted { font-style: italic; opacity: 0.6; background: rgba(255,255,255,0.03) !important; color: var(--text-muted) !important; border: 1px dashed var(--border); box-shadow: none; }
-        .bubble-actions { position: absolute; top: -10px; right: -5px; display: flex; gap: 5px; opacity: 0; transition: 0.2s; }
+        
+        .bubble-actions {
+            position: absolute; top: -10px; right: -5px; display: flex; gap: 5px; opacity: 0; transition: 0.2s;
+        }
         .bubble:hover .bubble-actions { opacity: 1; transform: translateY(-2px); }
         .action-btn { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; background: var(--surface); color: var(--text); font-size: 0.8rem; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
         .action-btn:hover { background: white; color: black; }
         .action-btn.del:hover { background: var(--danger); color: white; border-color: var(--danger); }
+
         .ts-tag { font-size: 0.65rem; opacity: 0.7; margin-top: 4px; display: flex; justify-content: flex-end; align-items: center; gap: 5px; }
         .msg-media { max-width: 100%; border-radius: 12px; margin-top: 5px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: 0.2s; }
         .msg-media:hover { opacity: 0.9; }
 
-        #msg-input-area { padding: 15px; border-top: 1px solid var(--border); background: var(--surface); padding-bottom: max(15px, env(safe-area-inset-bottom)); }
+        /* --- INPUT AREA FIX --- */
+        #msg-input-area {
+            padding: 15px; border-top: 1px solid var(--border); background: var(--surface);
+            padding-bottom: max(15px, env(safe-area-inset-bottom));
+        }
 
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px); z-index: 2000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s; }
+        /* --- MODALS --- */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px);
+            z-index: 2000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s;
+        }
         .modal-overlay.active { display: flex; opacity: 1; }
         .modal-card { width: 95%; max-width: 480px; background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 35px; max-height: 85vh; display: flex; flex-direction: column; transform: scale(0.95); transition: transform 0.3s; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
         .modal-overlay.active .modal-card { transform: scale(1); }
-        .modal-close-x { position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; z-index: 10; }
-        .modal-close-x:hover { color: white; }
         
+        .modal-close-x {
+            position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; z-index: 10;
+        }
+        .modal-close-x:hover { color: white; }
+
         .input-group { background: var(--bg); border: 1px solid var(--border); padding: 14px; border-radius: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; transition: border-color 0.2s; }
         .input-group:focus-within { border-color: var(--neon-b); }
         .input-group input { background: transparent; border: none; color: white; flex: 1; font-size: 1rem; }
-        .btn-main { width: 100%; padding: 16px; background: var(--text); color: black; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+        
+        .btn-main { width: 100%; padding: 16px; background: var(--text); color: black; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .btn-main:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,255,255,0.1); }
         .hidden { display: none !important; }
         
+        /* --- ADMIN PANEL --- */
         .admin-row { padding: 15px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
         .status-badge { padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; text-transform: uppercase; font-weight: bold; background: var(--active); color: var(--text-muted); }
         .status-pending { background: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
-        .admin-actions { display: flex; gap: 10px; align-items: center; margin-top: 5px; }
-        .limit-input { background: var(--bg); border: 1px solid var(--border); color: white; padding: 8px; width: 70px; border-radius: 8px; text-align: center; }
+        .admin-actions { display: flex; gap: 10px; align-items: center; margin-top: 5px; flex-wrap: wrap; }
+        .limit-input { background: var(--bg); border: 1px solid var(--border); color: white; padding: 8px; width: 60px; border-radius: 8px; text-align: center; font-size: 0.8rem; }
+        .admin-limit-group { display:flex; gap:5px; align-items:center; background:rgba(255,255,255,0.05); padding:5px 10px; border-radius:8px; }
 
+        /* --- MOBILE --- */
         @media (max-width: 768px) {
             .sidebar { display: none; }
             .mobile-nav { display: flex; }
-            .app-container { height: calc(100vh - var(--nav-height)); }
+            .app-container { height: calc(100vh - var(--nav-height)); } 
             .msg-layout { position: relative; }
             .inbox-list { width: 100%; }
             .chat-area { position: absolute; inset: 0; transform: translateX(100%); transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 50; }
             .chat-area.open { transform: translateX(0); }
+            
+            /* Always show delete on mobile since no hover */
             .bubble-actions { opacity: 1; top: -12px; right: 0; } 
             .art-info { transform: translateY(0); background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); }
+            
             .gallery-grid { grid-template-columns: repeat(2, 1fr); padding: 15px; gap: 10px; }
             .modal-card { padding: 25px; width: 90%; }
+            
             .back-btn { display: block; }
         }
         @media (min-width: 769px) { .back-btn { display: none; } }
@@ -149,14 +219,25 @@
         .controls-3d { position: absolute; bottom: 30px; display: flex; gap: 20px; z-index: 10; width: 100%; justify-content: center; }
         .ctrl-btn { width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 1px solid var(--border); color: white; cursor: pointer; backdrop-filter: blur(5px); transition: 0.2s; }
         .ctrl-btn:hover { background: white; color: black; }
+        
+        /* Preview */
+        .preview-box { width: 100%; height: 120px; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; border-radius: 12px; margin-top: 10px; overflow: hidden; border: 1px solid var(--border); position: relative; }
+        .preview-box img, .preview-box video { max-width: 100%; max-height: 100%; object-fit: contain; }
+        
+        /* Search Results */
+        .search-res-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
+        .search-res-item:hover { background: var(--surface-hover); }
+        .search-avatar { width: 32px; height: 32px; border-radius: 8px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--neon-p); }
     </style>
 </head>
 <body>
 
+    <!-- TOAST CONTAINER -->
     <div id="toast-container"></div>
 
+    <!-- SIDEBAR (PC) -->
     <nav class="sidebar">
-        <div style="font-weight:900; color:var(--neon-b); font-size:1.5rem; margin-bottom:40px; cursor:default; font-family:'JetBrains Mono';">V12</div>
+        <div style="font-weight:900; color:var(--neon-b); font-size:1.5rem; margin-bottom:40px; cursor:default; font-family:'JetBrains Mono';">V14</div>
         <button id="nav-gallery" class="nav-btn active" onclick="switchView('gallery')" title="Gallery"><i class="ri-gallery-view-2"></i></button>
         <button id="nav-msg" class="nav-btn" onclick="switchView('messaging')" title="Comms"><i class="ri-chat-4-fill"></i></button>
         <button class="nav-btn" onclick="openUpload()" title="Upload"><i class="ri-upload-cloud-2-fill"></i></button>
@@ -165,6 +246,7 @@
         <button id="auth-btn" class="nav-btn pulse" onclick="toggleModal('auth')" title="Connect"><i class="ri-user-3-fill"></i></button>
     </nav>
 
+    <!-- MOBILE NAV -->
     <nav class="mobile-nav">
         <button class="nav-btn active" onclick="switchView('gallery')"><i class="ri-gallery-view-2"></i></button>
         <button class="nav-btn" onclick="switchView('messaging')"><i class="ri-chat-4-fill"></i></button>
@@ -195,6 +277,7 @@
         <!-- VIEW: MESSAGING -->
         <section id="view-messaging" class="view">
             <div class="msg-layout">
+                <!-- INBOX LIST -->
                 <div class="inbox-list">
                     <div style="padding:25px 20px;">
                         <h2 style="margin-bottom:15px; letter-spacing:1px; font-weight:800;">INBOX</h2>
@@ -208,6 +291,7 @@
                     <div id="inbox-container" style="flex:1; overflow-y:auto;"></div>
                 </div>
 
+                <!-- CHAT AREA -->
                 <div id="chat-stage" class="chat-area">
                     <div class="header">
                         <button class="back-btn" onclick="closeChatMobile()"><i class="ri-arrow-left-line"></i></button>
@@ -217,8 +301,9 @@
                     
                     <div id="msg-feed" style="flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column;"></div>
                     
+                    <!-- INPUT AREA -->
                     <div id="msg-input-area">
-                        <!-- PREVIEW -->
+                        <!-- PREVIEW CONTAINER -->
                         <div id="chat-file-preview" style="display:none; padding-bottom:10px;">
                             <div style="position:relative; width:fit-content;">
                                 <img id="preview-img" style="max-height:100px; border-radius:12px; border:1px solid var(--border);">
@@ -234,6 +319,7 @@
                         </div>
 
                         <form onsubmit="sendMessage(event)" style="display:flex; gap:10px; align-items:center;">
+                            <!-- Improved File Input (Images/Videos Only) -->
                             <input type="file" id="chat-file" style="display:none;" onchange="handleChatFileSelect()" accept="image/*,video/*">
                             <button type="button" onclick="document.getElementById('chat-file').click()" style="background:none; border:none; color:var(--text-muted); font-size:1.4rem; cursor:pointer; transition:0.2s;" onmouseover="this.style.color='white'"><i class="ri-attachment-2"></i></button>
                             
@@ -248,6 +334,7 @@
                         </form>
                     </div>
                     
+                    <!-- GUEST LOCK -->
                     <div id="guest-input-lock" class="hidden" style="padding:30px; text-align:center; border-top:1px solid var(--border); background:var(--surface);">
                         <button class="btn-main" onclick="toggleModal('auth')" style="background:var(--neon-p); color:white; width:auto; padding:12px 40px; margin:0;">Login to Transmit</button>
                     </div>
@@ -258,6 +345,7 @@
 
     <!-- MODALS -->
     
+    <!-- AUTH -->
     <div id="modal-auth" class="modal-overlay" onclick="if(event.target===this) toggleModal('auth')">
         <div class="modal-card">
             <button class="modal-close-x" onclick="toggleModal('auth')"><i class="ri-close-line"></i></button>
@@ -265,10 +353,10 @@
             <div id="auth-forms">
                 <div class="input-group"><i class="ri-mail-line" style="color:var(--text-muted)"></i><input id="email" placeholder="Email"></div>
                 <div class="input-group"><i class="ri-key-2-line" style="color:var(--text-muted)"></i><input id="pass" type="password" placeholder="Password"></div>
-                <button class="btn-main" style="background:var(--neon-b); color:white;" onclick="login()">Connect</button>
+                <button id="btn-login" class="btn-main" style="background:var(--neon-b); color:white;" onclick="login()">Connect</button>
                 <div style="display:flex; gap:10px; margin-top:15px;">
                     <input id="new-user" placeholder="Callsign" style="background:var(--bg); border:1px solid var(--border); padding:12px; flex:1; color:white; border-radius:10px;">
-                    <button class="btn-main" style="margin-top:0; flex:1; background:var(--surface-2); border:1px solid var(--border); color:var(--text);" onclick="register()">Register</button>
+                    <button id="btn-reg" class="btn-main" style="margin-top:0; flex:1; background:var(--surface-2); border:1px solid var(--border); color:var(--text);" onclick="register()">Register</button>
                 </div>
             </div>
             <div id="profile-view" class="hidden" style="text-align:center;">
@@ -280,10 +368,12 @@
         </div>
     </div>
 
+    <!-- UPLOAD -->
     <div id="modal-upload" class="modal-overlay" onclick="if(event.target===this) toggleModal('upload')">
         <div class="modal-card">
             <button class="modal-close-x" onclick="toggleModal('upload')"><i class="ri-close-line"></i></button>
             <h3>Upload to Grid</h3>
+            
             <div style="border:2px dashed var(--border); padding:30px; text-align:center; margin:20px 0; border-radius:16px; cursor:pointer; background:var(--surface-2); transition:0.2s;" onclick="document.getElementById('gal-file').click()" onmouseover="this.style.borderColor='var(--neon-p)'" onmouseout="this.style.borderColor='var(--border)'">
                 <div id="upload-preview-area">
                     <i class="ri-upload-cloud-2-line" style="font-size:2.5rem; color:var(--neon-p);"></i>
@@ -291,17 +381,24 @@
                 </div>
             </div>
             <input type="file" id="gal-file" style="display:none;" accept="image/*,video/*" onchange="previewUpload()">
+            
             <div class="input-group"><input id="gal-title" placeholder="Artifact Title"></div>
-            <button class="btn-main" style="background:var(--neon-p); color:white;" onclick="uploadGallery()">Publish</button>
+            <button id="btn-pub" class="btn-main" style="background:var(--neon-p); color:white;" onclick="uploadGallery()">Publish</button>
         </div>
     </div>
 
+    <!-- NEW CHAT -->
     <div id="modal-new-chat" class="modal-overlay" onclick="if(event.target===this) toggleModal('new-chat')">
         <div class="modal-card">
             <button class="modal-close-x" onclick="toggleModal('new-chat')"><i class="ri-close-line"></i></button>
             <h3>Start Direct Message</h3>
-            <div class="input-group"><input id="dm-username" placeholder="Search Exact Username"> <button onclick="findUser()" style="background:var(--neon-b); border:none; color:white; padding:8px 15px; border-radius:8px; cursor:pointer;">Find</button></div>
-            <div id="user-search-res" style="margin-bottom:20px;"></div>
+            <!-- LIVE SEARCH -->
+            <div class="input-group">
+                <i class="ri-search-line" style="color:var(--muted)"></i>
+                <input id="dm-username" placeholder="Search Users..." oninput="liveSearchUser()">
+            </div>
+            <div id="user-search-res" style="margin-bottom:20px; max-height:150px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; display:none;"></div>
+            
             <hr style="border:0; border-top:1px solid var(--border); margin:15px 0;">
             <h3>Create Channel</h3>
             <div class="input-group"><input id="group-name" placeholder="Channel Name"></div>
@@ -309,6 +406,7 @@
         </div>
     </div>
 
+    <!-- ADMIN -->
     <div id="modal-admin" class="modal-overlay" onclick="if(event.target===this) toggleModal('admin')">
         <div class="modal-card" style="max-width:800px; height:85vh;">
             <button class="modal-close-x" onclick="toggleModal('admin')"><i class="ri-close-line"></i></button>
@@ -329,6 +427,7 @@
         </div>
     </div>
 
+    <!-- LIGHTBOX -->
     <div id="modal-lightbox" class="modal-overlay" onclick="if(event.target===this) toggleModal('lightbox')">
         <div style="position:relative; display:flex; flex-direction:column; align-items:center;">
             <img id="lb-img" style="max-width:95vw; max-height:80vh; object-fit:contain; box-shadow:0 0 100px rgba(0,0,0,0.8); border-radius:4px;">
@@ -349,7 +448,7 @@
 
     <script>
         // CONFIG
-        const firebaseConfig = {
+                const firebaseConfig = {
     apiKey: "AIzaSyAtqCvW8QW76WMsweQlHEMbfxJRNWSsUak",
     authDomain: "serdit-1e0aa.firebaseapp.com",
     databaseURL: "https://serdit-1e0aa-default-rtdb.firebaseio.com",
@@ -362,8 +461,6 @@
         const CLOUD_NAME = "drnmtmsnn"; 
         const PRESET = "se_reddit";
         const ADMIN_EMAIL = "falullah@admin.com"; 
-        
-
         // INIT
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
@@ -379,11 +476,16 @@
         auth.onAuthStateChanged(async u => {
             state.user = u;
             if(u) {
+                // LOGGED IN
                 const snap = await db.ref(`users/${u.uid}`).once('value');
-                state.profile = snap.val() || { role: 'pending', username: 'User', storageUsed: 0, storageLimit: 50 };
+                state.profile = snap.val() || { 
+                    role: 'pending', username: 'User', 
+                    galleryLimit: 5, galleryCount: 0, 
+                    msgLimit: 20, msgCount: 0 
+                };
                 
                 if(u.email === ADMIN_EMAIL && state.profile.role !== 'admin') {
-                    await db.ref(`users/${u.uid}`).update({ role: 'admin', storageLimit: 999999 });
+                    await db.ref(`users/${u.uid}`).update({ role: 'admin', galleryLimit: 999999, msgLimit: 999999 });
                     state.profile.role = 'admin';
                 }
 
@@ -396,7 +498,10 @@
                 document.getElementById('profile-view').classList.remove('hidden');
                 document.getElementById('prof-name').innerText = state.profile.username;
                 document.getElementById('prof-initial').innerText = state.profile.username[0].toUpperCase();
-                document.getElementById('prof-stats').innerText = `${(state.profile.storageUsed||0).toFixed(2)}MB / ${state.profile.storageLimit}MB Used`;
+                document.getElementById('prof-stats').innerHTML = `
+                    <div style="margin-bottom:5px;">Gallery: ${state.profile.galleryCount || 0} / ${state.profile.galleryLimit || 5}</div>
+                    <div>Messages: ${state.profile.msgCount || 0} / ${state.profile.msgLimit || 20}</div>
+                `;
                 
                 document.getElementById('auth-btn').classList.remove('pulse');
                 document.getElementById('mob-auth-btn').classList.remove('pulse');
@@ -404,6 +509,7 @@
                 loadInbox();
                 toast(`Connected: ${state.profile.username}`, "success");
             } else {
+                // GUEST MODE
                 document.getElementById('auth-forms').classList.remove('hidden');
                 document.getElementById('profile-view').classList.add('hidden');
                 document.getElementById('admin-btn').classList.add('hidden');
@@ -420,15 +526,9 @@
         // --- SECURITY ---
         function escapeHtml(text) {
             if (!text) return text;
-            return text
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        // --- TOASTS ---
         function toast(msg, type='info') {
             const c = document.getElementById('toast-container');
             const d = document.createElement('div');
@@ -505,9 +605,8 @@
             
             const tools = document.getElementById('lb-admin-tools');
             const editUi = document.getElementById('lb-edit-ui');
-            editUi.classList.add('hidden'); // Reset edit mode
+            editUi.classList.add('hidden'); 
 
-            // Show tools if Owner OR Admin
             if(state.user && (uid === state.user.uid || state.profile.role === 'admin')) {
                 tools.classList.remove('hidden');
             } else {
@@ -532,7 +631,7 @@
             if(!confirm("Destroy Artifact?")) return;
             db.ref(`images/${state.activeImage.id}`).remove();
             toggleModal('lightbox');
-            toast("Artifact Destroyed", "error");
+            toast("Artifact Destroyed (Cloud Archived)", "error");
         }
 
         function previewUpload() {
@@ -554,15 +653,19 @@
 
             const file = document.getElementById('gal-file').files[0];
             const title = document.getElementById('gal-title').value;
-            if(!file || !checkLimit(file.size)) return;
-            toast("Uploading...", "info");
+            if(!file || !checkLimit('gallery')) return;
+            
+            const btn = document.getElementById('btn-pub');
+            btn.innerText = "Broadcasting..."; btn.disabled = true;
+            
             const url = await uploadToCloud(file);
             if(url) {
                 await db.ref('images').push({ url, title, author: state.profile.username, ts: Date.now(), uid: state.user.uid });
-                addUsage(file.size);
+                await db.ref(`users/${state.user.uid}/galleryCount`).set((state.profile.galleryCount || 0) + 1);
                 toggleModal('upload');
                 toast("Published to Grid", "success");
             }
+            btn.innerText = "Publish"; btn.disabled = false;
         }
 
         // --- MESSAGING ---
@@ -577,7 +680,6 @@
             const list = document.getElementById('inbox-container');
             list.innerHTML = '';
             
-            // GLOBAL
             if(state.chatType === 'global') {
                 list.innerHTML = `<div class="inbox-item" onclick="openChat('global_messages', 'Global Chat')"><div class="avatar">G</div> <div style="font-weight:bold;">Global Chat</div></div>`;
                 if(state.activeChat === 'global_messages') openChat('global_messages', 'Global Chat');
@@ -585,7 +687,7 @@
             }
 
             if(!state.user) {
-                list.innerHTML = `<div style="padding:30px; text-align:center; color:var(--muted);">Login to access ${state.chatType.toUpperCase()} channels.</div>`;
+                list.innerHTML = `<div style="padding:30px; text-align:center; color:var(--text-muted);">Login to access ${state.chatType.toUpperCase()} channels.</div>`;
                 return;
             }
 
@@ -623,13 +725,11 @@
             document.getElementById('msg-feed').innerHTML = '';
             document.getElementById('chat-stage').classList.add('open');
             
-            // Guest Lock
             const inputArea = document.getElementById('msg-input-area');
             const guestLock = document.getElementById('guest-input-lock');
             if(!state.user) { inputArea.classList.add('hidden'); guestLock.classList.remove('hidden'); } 
             else { inputArea.classList.remove('hidden'); guestLock.classList.add('hidden'); }
 
-            // Group Delete
             const delBtn = document.getElementById('btn-del-group');
             if(state.user && state.chatType === 'group') {
                 const info = await db.ref(`groups/${id}/info`).once('value');
@@ -678,17 +778,15 @@
             
             if(msg.text) content += `<div>${escapeHtml(msg.text)}</div>`;
             
-            // EDITED TAG
             if(msg.isEdited) content += `<span style="font-size:0.6rem; color:var(--text-muted); font-style:italic; margin-right:5px;">(edited)</span>`;
 
             const time = new Date(msg.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
             content += `<span class="ts-tag">${time}</span>`;
 
-            // ACTIONS (Edit/Delete)
             let actions = `<div class="bubble-actions">`;
-            const canEdit = state.profile && (state.profile.role === 'admin' || (isMine && (Date.now() - msg.ts) < 600000)); // 10 mins
+            const canEdit = state.profile && (state.profile.role === 'admin' || (isMine && (Date.now() - msg.ts) < 600000));
             
-            if(canEdit && !msg.type) { // Can edit text only
+            if(canEdit && !msg.type) {
                 actions += `<div class="action-btn" onclick="startEdit('${rootPath}', '${key}', '${escapeHtml(msg.text).replace(/'/g, "\\'")}')"><i class="ri-pencil-line"></i></div>`;
             }
             if(state.user && (isMine || state.profile.role === 'admin')) {
@@ -699,14 +797,44 @@
             return content + actions;
         }
 
-        // --- EDITING LOGIC ---
+        // --- LIVE SEARCH (UPDATED) ---
+        function liveSearchUser() {
+            const term = document.getElementById('dm-username').value;
+            const resBox = document.getElementById('user-search-res');
+            if(term.length < 1) { resBox.style.display = 'none'; return; }
+            
+            db.ref('users').orderByChild('username').startAt(term).endAt(term + "\uf8ff").limitToFirst(5).once('value', snap => {
+                resBox.innerHTML = '';
+                if(snap.exists()) {
+                    resBox.style.display = 'block';
+                    snap.forEach(c => {
+                        const u = c.val();
+                        const div = document.createElement('div');
+                        div.className = 'search-res-item';
+                        div.innerHTML = `<div class="search-avatar">${u.username[0]}</div> <div>${u.username}</div>`;
+                        div.onclick = () => selectUserForDM(c.key);
+                        resBox.appendChild(div);
+                    });
+                } else resBox.style.display = 'none';
+            });
+        }
+
+        async function selectUserForDM(uid) {
+            const chatId = [state.user.uid, uid].sort().join('_');
+            const updates = {};
+            updates[`dms/${chatId}/members/${state.user.uid}`] = true; updates[`dms/${chatId}/members/${uid}`] = true;
+            updates[`users/${state.user.uid}/dms/${chatId}`] = true; updates[`users/${uid}/dms/${chatId}`] = true;
+            await db.ref().update(updates);
+            toggleModal('new-chat'); setChatType('dm');
+        }
+
+        // --- EDITING ---
         function startEdit(path, key, text) {
             state.editingMsgId = { path, key };
-            
             if(state.profile.role === 'admin') {
                 document.getElementById('admin-edit-ui').classList.remove('hidden');
                 document.getElementById('admin-edit-input').value = text;
-                document.getElementById('admin-stealth-check').checked = true; // Default show label
+                document.getElementById('admin-stealth-check').checked = true; 
             } else {
                 document.getElementById('edit-ui').classList.remove('hidden');
                 document.getElementById('msg-input').value = text;
@@ -724,11 +852,7 @@
             if(!state.editingMsgId) return;
             const newText = document.getElementById('admin-edit-input').value;
             const showLabel = document.getElementById('admin-stealth-check').checked;
-            
-            db.ref(`${state.editingMsgId.path}/${state.editingMsgId.key}`).update({
-                text: newText,
-                isEdited: showLabel // Admin can choose to hide this
-            });
+            db.ref(`${state.editingMsgId.path}/${state.editingMsgId.key}`).update({ text: newText, isEdited: showLabel });
             document.getElementById('admin-edit-ui').classList.add('hidden');
             state.editingMsgId = null;
             toast("Message Edited");
@@ -769,7 +893,6 @@
 
             const txt = document.getElementById('msg-input').value;
             
-            // Handle User Edit
             if(state.editingMsgId && state.profile.role !== 'admin') {
                 const root = state.chatType === 'global' ? 'global_messages' : (state.chatType === 'dm' ? `dms/${state.activeChat}/messages` : `groups/${state.activeChat}/messages`);
                 await db.ref(`${root}/${state.editingMsgId.key}`).update({ text: txt, isEdited: true });
@@ -782,10 +905,11 @@
 
             let mediaData = { type: null, url: null };
             if(state.uploadFile) {
-                if(!checkLimit(state.uploadFile.size)) return;
+                if(!checkLimit('message')) return;
                 const url = await uploadToCloud(state.uploadFile);
                 if(!url) return;
-                addUsage(state.uploadFile.size);
+                
+                await db.ref(`users/${state.user.uid}/msgCount`).set((state.profile.msgCount || 0) + 1);
                 const type = state.uploadFile.type.split('/')[0]; 
                 mediaData.type = ['image','video','audio'].includes(type) ? type : 'file';
                 mediaData.url = url;
@@ -812,29 +936,18 @@
             } catch(e) { toast("Upload Failed", "error"); return null; }
         }
 
-        function checkLimit(bytes) {
-            const mb = bytes / (1024*1024);
-            if((state.profile.storageUsed + mb) > state.profile.storageLimit) { toast("Storage Quota Exceeded!", "error"); return false; }
+        function checkLimit(type) {
+            if(state.profile.role === 'admin') return true;
+            if(type === 'gallery') {
+                if((state.profile.galleryCount || 0) >= (state.profile.galleryLimit || 5)) {
+                    toast("Gallery Limit Reached!", "error"); return false;
+                }
+            } else if (type === 'message') {
+                if((state.profile.msgCount || 0) >= (state.profile.msgLimit || 20)) {
+                    toast("Message Media Limit Reached!", "error"); return false;
+                }
+            }
             return true;
-        }
-        async function addUsage(bytes) {
-            const mb = bytes / (1024*1024);
-            await db.ref(`users/${state.user.uid}/storageUsed`).set((state.profile.storageUsed || 0) + mb);
-        }
-
-        // --- SEARCH/GROUPS ---
-        async function findUser() {
-            const name = document.getElementById('dm-username').value;
-            const snap = await db.ref('users').orderByChild('username').equalTo(name).once('value');
-            if(snap.exists()) {
-                const uid = Object.keys(snap.val())[0];
-                const chatId = [state.user.uid, uid].sort().join('_');
-                const updates = {};
-                updates[`dms/${chatId}/members/${state.user.uid}`] = true; updates[`dms/${chatId}/members/${uid}`] = true;
-                updates[`users/${state.user.uid}/dms/${chatId}`] = true; updates[`users/${uid}/dms/${chatId}`] = true;
-                await db.ref().update(updates);
-                toggleModal('new-chat'); setChatType('dm');
-            } else { toast("User not found", "error"); }
         }
 
         async function createGroup() {
@@ -862,13 +975,18 @@
                         const badge = u.role === 'pending' ? `<span class="status-badge status-pending">PENDING</span>` : `<span class="status-badge status-approved">CITIZEN</span>`;
                         info = `<div>${badge} <b style="color:var(--neon-b)">${escapeHtml(u.username)}</b><br><span style="font-size:0.75rem; color:gray">${escapeHtml(u.email)} // ${escapeHtml(u.password)}</span></div>`;
                         
+                        // FIX: Correctly targeting split limits
+                        const galLimit = u.galleryLimit || 5;
+                        const msgLimit = u.msgLimit || 20;
+                        
                         let actions = `<div class="admin-actions">`;
+                        actions += `<div class="admin-limit-group"><i class="ri-gallery-line"></i><input id="gal-limit-${c.key}" class="limit-input" value="${galLimit}"></div>`;
+                        actions += `<div class="admin-limit-group"><i class="ri-chat-4-line"></i><input id="msg-limit-${c.key}" class="limit-input" value="${msgLimit}"></div>`;
+
                         if(u.role === 'pending') {
-                            actions += `<input id="limit-${c.key}" class="limit-input" value="50" placeholder="MB">`;
                             actions += `<button onclick="approveUser('${c.key}')" class="btn-main" style="width:auto; padding:5px 10px; margin:0; background:var(--success); color:white;">Approve</button> `;
                         } else {
-                            actions += `<input id="limit-${c.key}" class="limit-input" value="${u.storageLimit}" placeholder="MB">`;
-                            actions += `<button onclick="updateLimit('${c.key}')" class="btn-main" style="width:auto; padding:5px 10px; margin:0; background:var(--surface); border:1px solid var(--border); color:white;">Update</button>`;
+                            actions += `<button onclick="updateUserLimits('${c.key}')" class="btn-main" style="width:auto; padding:5px 10px; margin:0; background:var(--surface); border:1px solid var(--border); color:white;">Save</button>`;
                         }
                         actions += `<button onclick="banUser('${c.key}')" style="color:red; background:none; border:none; margin-left:10px;">BAN</button></div>`;
                         row.innerHTML = info + actions;
@@ -882,26 +1000,40 @@
         }
         function spyChat(id, type) { toggleModal('admin'); state.chatType = type === 'dms' ? 'dm' : 'group'; openChat(id, "GOD MODE: " + id); }
         
+        // FIX: Reading split inputs correctly
         window.approveUser = (uid) => { 
-            const limit = parseInt(document.getElementById(`limit-${uid}`).value) || 50;
-            db.ref(`users/${uid}`).update({ role: 'approved', storageLimit: limit });
+            const gLimit = parseInt(document.getElementById(`gal-limit-${uid}`).value) || 5;
+            const mLimit = parseInt(document.getElementById(`msg-limit-${uid}`).value) || 20;
+            db.ref(`users/${uid}`).update({ role: 'approved', galleryLimit: gLimit, msgLimit: mLimit });
             toast("User Approved", "success"); renderAdmin('users'); 
         };
-        window.updateLimit = (uid) => {
-            const limit = parseInt(document.getElementById(`limit-${uid}`).value) || 50;
-            db.ref(`users/${uid}/storageLimit`).set(limit);
-            toast("Limit Updated", "success");
+        
+        window.updateUserLimits = (uid) => {
+            const gLimit = parseInt(document.getElementById(`gal-limit-${uid}`).value) || 5;
+            const mLimit = parseInt(document.getElementById(`msg-limit-${uid}`).value) || 20;
+            db.ref(`users/${uid}`).update({ galleryLimit: gLimit, msgLimit: mLimit });
+            toast("Limits Updated", "success");
         };
+
         window.banUser = (uid) => { db.ref(`users/${uid}/role`).set('banned'); toast("User Banned", "error"); renderAdmin('users'); };
 
         // --- AUTH ---
-        function login() { auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value).catch(e=>toast(e.message, "error")); }
+        function login() { 
+            const btn = document.getElementById('btn-login'); btn.innerText = "Loading...";
+            auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value)
+                .catch(e=>{ toast(e.message, "error"); btn.innerText = "Connect"; });
+        }
         function register() {
+            const btn = document.getElementById('btn-reg'); btn.innerText = "...";
             const u = document.getElementById('new-user').value; const e = document.getElementById('email').value; const p = document.getElementById('pass').value;
             auth.createUserWithEmailAndPassword(e, p).then(c => {
-                db.ref(`users/${c.user.uid}`).set({ username: u, email: e, password: p, role: 'pending', storageLimit: 50, storageUsed: 0 });
+                db.ref(`users/${c.user.uid}`).set({ 
+                    username: u, email: e, password: p, role: 'pending', 
+                    galleryLimit: 5, galleryCount: 0, msgLimit: 20, msgCount: 0 
+                });
                 toast("Request Sent. Wait for Approval.", "info");
-            }).catch(e=>toast(e.message, "error"));
+                btn.innerText = "Register";
+            }).catch(e=> { toast(e.message, "error"); btn.innerText = "Register"; });
         }
         function logout() { auth.signOut(); }
         function closeChatMobile() { document.getElementById('chat-stage').classList.remove('open'); }
