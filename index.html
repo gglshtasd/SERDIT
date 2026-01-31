@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SERDIT | Curated Chaos</title>
+    <title>SERDIT | The Void</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -13,390 +13,393 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
     <style>
-        /* --- SERDIT DESIGN SYSTEM (CYBER-INDUSTRIAL) --- */
+        /* --- THEME: THE VOID (v4 Refined) --- */
         :root {
-            --void: #050505;
-            --panel: #111111;
-            --border: #333333;
-            --acid: #ccff00; /* Signature Lime */
-            --acid-dim: rgba(204, 255, 0, 0.1);
-            --text: #eeeeee;
-            --muted: #666666;
-            --danger: #ff2a2a;
+            --bg: #030305;
+            --surface: #0a0a0f;
+            --surface-2: #13131a;
+            --border: #1f1f2e;
             
-            --dock-width: 80px;
-            --ease: cubic-bezier(0.23, 1, 0.32, 1);
+            --neon-p: #a855f7; /* Purple */
+            --neon-b: #3b82f6; /* Blue */
+            --neon-alert: #f43f5e; /* Red for Login/Admin */
+            --text: #e2e8f0;
+            --muted: #64748b;
+            
+            --nav-height: 70px;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; outline: none; }
         
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--void);
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg);
             color: var(--text);
             height: 100vh;
             overflow: hidden;
             display: flex;
+            background-image: radial-gradient(circle at 10% 20%, rgba(168, 85, 247, 0.08) 0%, transparent 25%),
+                              radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 25%);
         }
 
-        /* --- BACKGROUND NOISE (Texture) --- */
-        .noise-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MDAiIGhlaWdodD0iNTAwIj48ZmlsdGVyIGlkPSJnoiPjxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjY1IiBudW1PY3RhdmVzPSIzIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+PC9maWx0ZXI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI2cpIiBvcGFjaXR5PSIwLjA1Ii8+PC9zdmc+');
-            pointer-events: none; z-index: 5; opacity: 0.4;
-        }
-
-        /* --- NAVIGATION DOCK --- */
-        .dock {
-            width: var(--dock-width);
-            height: 100vh;
-            background: var(--panel);
-            border-right: 1px solid var(--border);
-            display: flex; flex-direction: column; align-items: center;
-            padding: 30px 0; z-index: 100;
-            transition: width 0.3s var(--ease);
+        /* --- LAYOUT STRUCTURE --- */
+        .app-container { flex: 1; display: flex; position: relative; height: 100%; width: 100%; }
+        
+        /* PC Sidebar */
+        .sidebar {
+            width: 80px; background: var(--surface); border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; align-items: center; padding: 20px 0; z-index: 50;
         }
         
-        .brand { 
-            writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg);
-            font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1.5rem; letter-spacing: 2px;
-            color: var(--acid); margin-bottom: 40px; cursor: default;
+        /* Mobile Bottom Nav */
+        .mobile-nav {
+            display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: var(--nav-height);
+            background: rgba(10, 10, 15, 0.95); backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border); z-index: 100;
+            justify-content: space-around; align-items: center;
         }
 
-        .dock-btn {
-            width: 50px; height: 50px; border-radius: 12px;
-            background: transparent; border: 1px solid transparent; color: var(--muted);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.4rem; cursor: pointer; transition: 0.2s; margin-bottom: 10px;
-            position: relative;
+        .nav-btn {
+            width: 50px; height: 50px; border-radius: 16px; border: none; background: transparent;
+            color: var(--muted); font-size: 1.5rem; cursor: pointer; transition: 0.3s;
+            display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 15px;
         }
-        .dock-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); }
-        .dock-btn.active { color: var(--void); background: var(--acid); box-shadow: 0 0 15px var(--acid-dim); }
-        .dock-btn.alert::after {
-            content: ''; position: absolute; top: 10px; right: 10px; width: 8px; height: 8px;
-            background: var(--danger); border-radius: 50%;
+        .nav-btn:hover { color: white; background: rgba(255,255,255,0.05); }
+        .nav-btn.active { color: var(--neon-b); background: rgba(59, 130, 246, 0.1); box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); }
+        
+        /* Login/Auth Button Styles */
+        .auth-btn-glow {
+            color: var(--neon-alert);
+            animation: pulse-red 2s infinite;
+        }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(244, 63, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
         }
 
-        /* --- MAIN STAGE --- */
-        .stage { flex: 1; position: relative; display: flex; flex-direction: column; }
-
-        .top-bar {
-            height: 80px; display: flex; align-items: center; justify-content: space-between;
-            padding: 0 40px; border-bottom: 1px solid var(--border);
+        /* --- MAIN VIEWS --- */
+        .view { flex: 1; display: none; flex-direction: column; height: 100%; overflow: hidden; animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .view.active { display: flex; }
+        
+        /* Header */
+        .header {
+            height: 70px; padding: 0 25px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(3, 3, 5, 0.8); backdrop-filter: blur(10px); z-index: 10;
         }
-        .page-title { font-family: 'Space Grotesk', sans-serif; font-size: 2rem; font-weight: 300; }
-        .page-title span { font-weight: 700; color: var(--acid); }
+        .page-title { font-weight: 800; font-size: 1.5rem; letter-spacing: -1px; background: linear-gradient(to right, white, var(--muted)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-        .filters { display: flex; gap: 10px; }
-        .filter-chip {
-            padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px;
-            font-size: 0.8rem; cursor: pointer; color: var(--muted); transition: 0.2s;
-        }
-        .filter-chip.active { border-color: var(--acid); color: var(--acid); background: var(--acid-dim); }
+        /* --- VIEW 1: MESSAGING --- */
+        .msg-layout { display: flex; height: 100%; }
+        .inbox-list { width: 350px; border-right: 1px solid var(--border); background: var(--surface-2); display: flex; flex-direction: column; }
+        .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--bg); position: relative; }
+        
+        .chat-tabs { display: flex; padding: 15px; gap: 10px; }
+        .chat-tab { flex: 1; padding: 10px; background: var(--surface); border: 1px solid var(--border); color: var(--muted); border-radius: 8px; cursor: pointer; font-size: 0.85rem; text-align: center; transition:0.2s; font-weight: 600; }
+        .chat-tab.active { background: var(--neon-b); color: white; border-color: var(--neon-b); }
 
-        /* --- MASONRY GRID --- */
-        .viewport {
-            flex: 1; overflow-y: auto; padding: 40px;
-            /* Masonry Logic */
-            column-count: 4; column-gap: 20px;
+        .inbox-item { padding: 15px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; gap: 15px; transition: 0.2s; }
+        .inbox-item:hover { background: rgba(255,255,255,0.03); }
+        .avatar { width: 45px; height: 45px; border-radius: 12px; background: linear-gradient(135deg, var(--surface), var(--border)); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--neon-p); font-size: 1.2rem; }
+        
+        /* Messages */
+        .msg-feed { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .bubble { max-width: 75%; padding: 12px 18px; border-radius: 18px; font-size: 0.95rem; position: relative; line-height: 1.5; }
+        .bubble.mine { align-self: flex-end; background: linear-gradient(135deg, var(--neon-b), var(--neon-p)); color: white; border-bottom-right-radius: 4px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2); }
+        .bubble.theirs { align-self: flex-start; background: var(--surface-2); border: 1px solid var(--border); border-bottom-left-radius: 4px; color: var(--text); }
+        
+        .timer-badge { font-size: 0.7rem; display: inline-flex; align-items: center; gap: 3px; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; margin-top: 5px; opacity: 0.8; }
+        .msg-img { max-width: 100%; border-radius: 10px; margin-top: 5px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: 0.2s; }
+        .msg-img:hover { opacity: 0.9; }
+
+        /* --- VIEW 2: 3D GALLERY (DEFAULT) --- */
+        .gallery-3d-container {
+            flex: 1; padding: 30px; overflow-y: auto; perspective: 1200px;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 25px;
+            align-content: start;
         }
         .art-card {
-            break-inside: avoid; margin-bottom: 20px;
-            background: var(--panel); border: 1px solid var(--border); border-radius: 0px; /* Brutalist squared */
-            overflow: hidden; cursor: pointer; transition: 0.3s var(--ease);
-            position: relative;
+            aspect-ratio: 3/4; border-radius: 16px; overflow: hidden; position: relative;
+            background: var(--surface); border: 1px solid var(--border); cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s;
+            transform-style: preserve-3d; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
-        .art-card:hover { transform: translateY(-5px); border-color: var(--acid); z-index: 10; }
-        .art-card img { width: 100%; display: block; filter: grayscale(20%); transition: 0.5s; }
-        .art-card:hover img { filter: grayscale(0%); }
+        .art-card:hover { transform: translateZ(30px) scale(1.05) rotateX(2deg); border-color: var(--neon-b); z-index: 100; }
+        .art-card img { width: 100%; height: 100%; object-fit: cover; }
+        .art-overlay {
+            position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); opacity: 1;
+        }
+
+        /* --- ADMIN SPY PANEL --- */
+        .spy-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .spy-row { border-bottom: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
+        .spy-row td { padding: 12px; }
+        .spy-btn { padding: 6px 12px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); cursor: pointer; border-radius: 6px; transition: 0.2s; }
+        .spy-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+        /* --- MODALS & UTILS --- */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(20px);
+            z-index: 200; display: none; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-card { width: 90%; max-width: 420px; background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 35px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); transform: scale(0.95); transition: transform 0.3s; }
+        .modal-overlay.active .modal-card { transform: scale(1); }
         
-        .card-meta {
-            padding: 15px; border-top: 1px solid var(--border);
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .card-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
-        .card-author { font-size: 0.75rem; color: var(--muted); }
-
-        /* --- SLIDE-OVER PANELS (Unique UI) --- */
-        .panel-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
-            z-index: 500; opacity: 0; pointer-events: none; transition: 0.3s;
-        }
-        .panel-overlay.visible { opacity: 1; pointer-events: auto; }
-
-        .slide-panel {
-            position: fixed; top: 0; right: -500px; width: 450px; height: 100%;
-            background: var(--panel); border-left: 1px solid var(--acid);
-            display: flex; flex-direction: column; z-index: 600;
-            transition: 0.4s var(--ease); box-shadow: -20px 0 50px rgba(0,0,0,0.5);
-        }
-        .panel-overlay.visible .slide-panel { right: 0; }
-        .panel-header { padding: 30px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .panel-body { flex: 1; overflow-y: auto; padding: 30px; }
-
-        /* --- FORM ELEMENTS --- */
-        input, textarea {
-            width: 100%; background: var(--void); border: 1px solid var(--border);
-            color: var(--text); padding: 15px; font-family: 'Space Grotesk';
-            margin-bottom: 10px; transition: 0.2s;
-        }
-        input:focus { border-color: var(--acid); }
-        .btn-main {
-            width: 100%; padding: 15px; background: var(--acid); color: var(--void);
-            border: none; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
-            cursor: pointer; transition: 0.2s;
-        }
-        .btn-main:hover { transform: scale(1.02); box-shadow: 0 0 20px var(--acid-dim); }
-
-        /* --- CHAT SPECIFIC --- */
-        .chat-list-item { padding: 15px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; gap: 15px; }
-        .chat-list-item:hover { background: rgba(255,255,255,0.05); }
-        .chat-avatar { width: 40px; height: 40px; background: var(--border); color: var(--acid); display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .input-group { background: var(--bg); border: 1px solid var(--border); padding: 14px; border-radius: 12px; display: flex; gap: 10px; margin-bottom: 12px; transition: 0.2s; }
+        .input-group:focus-within { border-color: var(--neon-b); }
+        .input-group input { background: transparent; border: none; color: white; flex: 1; font-size: 1rem; }
         
-        .msg-row { display: flex; margin-bottom: 15px; }
-        .msg-row.mine { justify-content: flex-end; }
-        .msg-bubble { 
-            max-width: 80%; padding: 12px 18px; font-size: 0.9rem; line-height: 1.4;
-            background: var(--border); color: var(--text); border-radius: 2px 12px 12px 12px;
-        }
-        .msg-row.mine .msg-bubble { 
-            background: var(--acid); color: var(--void); border-radius: 12px 2px 12px 12px; 
-        }
-        .msg-img { max-width: 200px; border-radius: 8px; margin-top: 5px; border: 1px solid rgba(0,0,0,0.1); }
+        .btn-main { width: 100%; padding: 16px; background: var(--text); color: black; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 1rem; margin-top: 10px; transition: 0.2s; }
+        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,255,255,0.1); }
+        .btn-neon { background: var(--neon-b); color: white; }
+        .btn-neon:hover { box-shadow: 0 5px 20px rgba(59, 130, 246, 0.4); }
 
-        /* --- IMMERSIVE LIGHTBOX --- */
-        .lightbox-overlay {
-            position: fixed; inset: 0; background: var(--void); z-index: 1000;
-            display: flex; opacity: 0; pointer-events: none; transition: 0.3s;
-        }
-        .lightbox-overlay.visible { opacity: 1; pointer-events: auto; }
-        
-        .lb-image-container { flex: 2; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at center, #111, #000); }
-        .lb-image-container img { max-width: 90%; max-height: 90%; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
-        
-        .lb-sidebar { flex: 1; background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; max-width: 400px; }
-        .lb-header { padding: 25px; border-bottom: 1px solid var(--border); }
-        
-        /* --- ADMIN TABLE --- */
-        .user-row {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 15px; background: var(--void); border: 1px solid var(--border);
-            margin-bottom: 5px;
-        }
-        .ctrl-group { display: flex; align-items: center; gap: 5px; }
-        .limit-btn { width: 30px; height: 30px; background: var(--border); color: var(--text); border: none; cursor: pointer; }
-        .limit-val { width: 30px; text-align: center; font-size: 0.8rem; }
+        .hidden { display: none !important; }
 
-        /* --- MOBILE OPTIMIZATION --- */
-        @media (max-width: 1024px) {
-            .viewport { column-count: 3; }
-        }
+        /* --- MOBILE RESPONSIVE --- */
         @media (max-width: 768px) {
-            body { flex-direction: column; }
-            .dock { 
-                width: 100%; height: 60px; order: 2; flex-direction: row; 
-                padding: 0 20px; justify-content: space-around; border-right: none; border-top: 1px solid var(--border);
+            .sidebar { display: none; }
+            .mobile-nav { display: flex; }
+            .app-container { height: calc(100vh - var(--nav-height)); }
+            
+            .msg-layout { position: relative; }
+            .inbox-list { width: 100%; border-right: none; }
+            .chat-area { 
+                position: absolute; inset: 0; transform: translateX(100%); transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+                z-index: 50; background: var(--bg);
             }
-            .brand { display: none; }
-            .dock-btn { width: 100%; height: 100%; border-radius: 0; margin: 0; font-size: 1.2rem; }
-            .dock-btn.active { box-shadow: inset 0 -3px 0 var(--acid); background: transparent; color: var(--acid); }
+            .chat-area.open { transform: translateX(0); }
             
-            .stage { order: 1; height: calc(100vh - 60px); }
-            .top-bar { padding: 0 20px; height: 60px; }
-            .page-title { font-size: 1.5rem; }
+            #back-btn { display: block !important; }
             
-            .viewport { column-count: 1; padding: 20px; }
+            .gallery-3d-container { padding: 15px; grid-template-columns: repeat(2, 1fr); gap: 15px; }
             
-            .slide-panel { width: 100%; right: -100%; }
-            .lightbox-overlay { flex-direction: column; overflow-y: auto; }
-            .lb-image-container { height: 50vh; flex: none; }
-            .lb-sidebar { max-width: none; flex: 1; min-height: 50vh; }
+            /* Make login button on mobile prominent */
+            #mob-auth-btn { background: var(--surface-2); border: 1px solid var(--border); }
         }
+        @media (min-width: 769px) {
+            #back-btn { display: none; }
+        }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body>
 
-    <div class="noise-overlay"></div>
-
-    <nav class="dock">
-        <div class="brand">SERDIT</div>
+    <!-- 1. PC SIDEBAR -->
+    <nav class="sidebar">
+        <div style="font-weight:900; color:white; font-size:1.5rem; margin-bottom:40px; color:var(--neon-b); cursor:default;">S</div>
         
-        <button class="dock-btn active" onclick="setFilter('all')" title="Gallery">
-            <i class="ri-layout-masonry-line"></i>
-        </button>
+        <!-- Navigation -->
+        <button id="nav-gallery" class="nav-btn active" onclick="switchView('gallery')" title="Public Gallery"><i class="ri-layout-masonry-fill"></i></button>
+        <button id="nav-msg" class="nav-btn" onclick="switchView('messaging')" title="Messages"><i class="ri-mail-fill"></i></button>
+        <button class="nav-btn" onclick="toggleModal('upload')" title="Upload"><i class="ri-add-circle-fill"></i></button>
         
-        <button class="dock-btn" onclick="togglePanel('messenger')" title="Comms">
-            <i class="ri-question-answer-line"></i>
-        </button>
+        <div style="flex:1"></div>
         
-        <button class="dock-btn" onclick="togglePanel('upload')" title="Upload">
-            <i class="ri-add-circle-line"></i>
-        </button>
-
-        <div style="flex:1"></div> <button id="btn-admin" class="dock-btn hidden" onclick="togglePanel('admin')" title="God Mode" style="color:var(--danger)">
-            <i class="ri-eye-2-line"></i>
-        </button>
+        <!-- ADMIN (Hidden by default) -->
+        <button id="desk-admin-btn" class="nav-btn hidden" onclick="toggleModal('admin')" style="color:var(--danger)" title="God Mode"><i class="ri-eye-2-fill"></i></button>
         
-        <button class="dock-btn" onclick="handleProfileClick()" title="Profile">
-            <i class="ri-user-3-line"></i>
-        </button>
+        <!-- AUTH/PROFILE (High Visibility) -->
+        <button id="desk-auth-btn" class="nav-btn auth-btn-glow" onclick="toggleModal('auth')" title="Connect"><i class="ri-user-3-fill"></i></button>
     </nav>
 
-    <main class="stage">
-        <header class="top-bar">
-            <h1 class="page-title">SERDIT <span>//</span> <span id="header-ctx">Feed</span></h1>
-            <div class="filters">
-                <div class="filter-chip active" onclick="sortGallery('new')">Fresh</div>
-                <div class="filter-chip" onclick="sortGallery('top')">Trending</div>
-            </div>
-        </header>
+    <!-- 2. MOBILE BOTTOM NAV -->
+    <nav class="mobile-nav">
+        <button id="mob-nav-gallery" class="nav-btn active" onclick="switchView('gallery')"><i class="ri-layout-masonry-fill"></i></button>
+        <button id="mob-nav-msg" class="nav-btn" onclick="switchView('messaging')"><i class="ri-mail-fill"></i></button>
+        <button class="nav-btn" onclick="toggleModal('upload')" style="color:white; background:var(--neon-b); border-radius:50%; margin-bottom:30px; width:60px; height:60px; box-shadow:0 0 20px rgba(59, 130, 246, 0.4); border:2px solid var(--bg);"><i class="ri-add-line"></i></button>
+        
+        <!-- ADMIN (Hidden) -->
+        <button id="mob-admin-btn" class="nav-btn hidden" onclick="toggleModal('admin')" style="color:var(--danger)"><i class="ri-eye-2-fill"></i></button>
+        
+        <!-- AUTH -->
+        <button id="mob-auth-btn" class="nav-btn auth-btn-glow" onclick="toggleModal('auth')"><i class="ri-user-3-fill"></i></button>
+    </nav>
 
-        <div id="viewport" class="viewport">
-            <div style="grid-column:1/-1; text-align:center; padding-top:100px; color:var(--muted);">
-                <i class="ri-loader-4-line ri-spin" style="font-size:2rem;"></i><br>Initializing Core...
-            </div>
-        </div>
-    </main>
-
-    <div class="panel-overlay" id="panel-auth">
-        <div class="slide-panel">
-            <div class="panel-header">
-                <h2>Identify</h2>
-                <button onclick="togglePanel('auth')" style="background:none; border:none; color:var(--text); cursor:pointer;"><i class="ri-close-line" style="font-size:1.5rem"></i></button>
-            </div>
-            <div class="panel-body">
-                <div id="view-login">
-                    <input id="login-email" placeholder="Email Address">
-                    <input id="login-pass" type="password" placeholder="Password">
-                    <button class="btn-main" onclick="handleLogin()">Access Serdit</button>
-                    <p style="margin-top:20px; text-align:center; font-size:0.8rem; color:var(--muted); cursor:pointer;" onclick="switchAuthView('register')">Request Citizenship (Register)</p>
-                </div>
-                <div id="view-register" class="hidden">
-                    <input id="reg-user" placeholder="Desired Callsign (Username)">
-                    <input id="reg-email" placeholder="Email Address">
-                    <input id="reg-pass" type="password" placeholder="Password">
-                    <button class="btn-main" onclick="handleRegister()">Init Identity</button>
-                    <p style="margin-top:20px; text-align:center; font-size:0.8rem; color:var(--muted); cursor:pointer;" onclick="switchAuthView('login')">Back to Login</p>
-                </div>
-                <div id="view-profile" class="hidden">
-                    <div style="text-align:center; margin-bottom:30px;">
-                        <div style="width:100px; height:100px; background:var(--acid); color:var(--void); border-radius:50%; margin:0 auto 20px; display:flex; align-items:center; justify-content:center; font-size:3rem; font-weight:bold;" id="profile-avatar">X</div>
-                        <h2 id="profile-name">User</h2>
-                        <p id="profile-role" style="color:var(--acid); font-family:'Space Grotesk'; letter-spacing:1px;">CITIZEN</p>
-                        <p id="profile-limit" style="color:var(--muted); font-size:0.8rem; margin-top:5px;">Uploads: 0/5</p>
-                    </div>
-                    <button class="btn-main" onclick="logout()" style="background:var(--border); color:var(--text);">Terminate Session</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="panel-overlay" id="panel-upload">
-        <div class="slide-panel">
-            <div class="panel-header">
-                <h2>Upload Artifact</h2>
-                <button onclick="togglePanel('upload')" style="background:none; border:none; color:var(--text); cursor:pointer;"><i class="ri-close-line" style="font-size:1.5rem"></i></button>
-            </div>
-            <div class="panel-body">
-                <div style="border: 2px dashed var(--border); padding:40px; text-align:center; margin-bottom:20px; border-radius:0;">
-                    <i class="ri-upload-cloud-2-line" style="font-size:2rem; color:var(--acid);"></i>
-                    <input type="file" id="fileIn" style="display:none;" onchange="document.getElementById('file-label').innerText = this.files[0].name">
-                    <p id="file-label" style="margin-top:10px; cursor:pointer;" onclick="document.getElementById('fileIn').click()">Select Binary</p>
-                </div>
-                <input id="up-title" placeholder="Artifact Title">
-                <button id="btn-publish" class="btn-main" onclick="uploadArt()">Broadcast</button>
-                <div id="upload-status" style="margin-top:15px; text-align:center; color:var(--acid);"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="panel-overlay" id="panel-messenger">
-        <div class="slide-panel" style="width:500px;">
-            <div class="panel-header">
-                <h2>Comms</h2>
+    <div class="app-container">
+        
+        <!-- === VIEW 1: PUBLIC GALLERY (DEFAULT LANDING) === -->
+        <section id="view-gallery" class="view active">
+            <div class="header">
+                <div class="page-title">Serdit Grid</div>
                 <div style="display:flex; gap:10px;">
-                     <button onclick="initCreateGroup()" style="background:none; border:none; color:var(--acid); cursor:pointer;"><i class="ri-add-line" style="font-size:1.5rem"></i></button>
-                     <button onclick="togglePanel('messenger')" style="background:none; border:none; color:var(--text); cursor:pointer;"><i class="ri-close-line" style="font-size:1.5rem"></i></button>
+                    <select id="gallery-filter" onchange="renderGallery()" style="background:var(--surface-2); color:white; border:1px solid var(--border); padding:8px 12px; border-radius:8px; outline:none; cursor:pointer;">
+                        <option value="all">Global Feed</option>
+                        <option value="trending">Top Rated</option>
+                    </select>
                 </div>
             </div>
-            <div class="panel-body" style="padding:0; display:flex; flex-direction:column;">
-                
-                <div id="view-chat-list" style="flex:1;">
-                    </div>
+            <div id="gallery-grid" class="gallery-3d-container">
+                <div style="grid-column:1/-1; text-align:center; padding-top:50px; color:var(--muted);">
+                    <i class="ri-loader-4-line ri-spin" style="font-size:2rem; margin-bottom:10px;"></i><br>Connecting to Void...
+                </div>
+            </div>
+        </section>
 
-                <div id="view-thread" class="hidden" style="flex:1; display:flex; flex-direction:column; height:100%;">
-                    <div style="padding:10px; background:var(--void); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px;">
-                        <button onclick="showChatList()" style="background:none; border:none; color:var(--muted); cursor:pointer;"><i class="ri-arrow-left-line"></i></button>
-                        <span id="thread-title" style="font-weight:bold;">Channel</span>
+        <!-- === VIEW 2: MESSAGING === -->
+        <section id="view-messaging" class="view">
+            <div class="msg-layout">
+                <!-- Inbox List -->
+                <div class="inbox-list">
+                    <div style="padding:25px; border-bottom:1px solid var(--border);">
+                        <h2 style="font-weight:800; margin-bottom:15px; font-size:1.4rem;">Inbox</h2>
+                        <div class="chat-tabs">
+                            <div class="chat-tab active" onclick="filterChats('dm')">Private</div>
+                            <div class="chat-tab" onclick="filterChats('group')">Channels</div>
+                        </div>
+                        <button onclick="toggleModal('new-chat')" style="width:100%; padding:12px; margin-top:15px; background:rgba(255,255,255,0.03); border:1px dashed var(--border); color:var(--neon-b); border-radius:10px; cursor:pointer; font-weight:600; transition:0.2s;">+ New Transmission</button>
                     </div>
-                    <div id="msg-feed" style="flex:1; overflow-y:auto; padding:20px;"></div>
-                    <form onsubmit="sendMessage(event)" style="padding:15px; border-top:1px solid var(--border); display:flex; gap:10px; background:var(--panel);">
-                        <button type="button" onclick="document.getElementById('chat-file').click()" style="background:none; border:none; color:var(--muted); cursor:pointer;"><i class="ri-attachment-line"></i></button>
-                        <input type="file" id="chat-file" style="display:none;" onchange="sendChatImage()">
-                        <input id="msg-input" placeholder="Transmit..." style="margin:0; background:var(--void);">
-                        <button class="btn-main" style="width:auto; padding:0 20px;"><i class="ri-send-plane-fill"></i></button>
+                    <div id="inbox-container" style="flex:1; overflow-y:auto;">
+                        <!-- Injected JS -->
+                    </div>
+                </div>
+
+                <!-- Active Chat Area -->
+                <div id="chat-stage" class="chat-area">
+                    <div class="header">
+                        <button id="back-btn" onclick="closeChatMobile()" style="background:none; border:none; color:white; font-size:1.5rem; margin-right:15px;"><i class="ri-arrow-left-line"></i></button>
+                        <div style="flex:1;">
+                            <h3 id="chat-header-name" style="font-size:1.1rem;">Select a frequency</h3>
+                            <div id="chat-header-status" style="font-size:0.75rem; color:var(--neon-b); opacity:0.7;">End-to-End Encrypted</div>
+                        </div>
+                        <button style="background:none; border:none; color:var(--muted); font-size:1.2rem;"><i class="ri-shield-check-fill"></i></button>
+                    </div>
+                    
+                    <div id="msg-feed" class="msg-feed"></div>
+                    
+                    <form onsubmit="sendMessage(event)" style="padding:15px; border-top:1px solid var(--border); background:var(--surface);">
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <!-- Ephemeral Timer -->
+                            <select id="timer-select" style="background:var(--bg); color:var(--danger); border:1px solid var(--border); padding:8px; border-radius:8px; font-size:0.8rem; cursor:pointer;">
+                                <option value="0">Keep</option>
+                                <option value="86400000">24h</option>
+                                <option value="172800000">48h</option>
+                            </select>
+                            
+                            <button type="button" onclick="document.getElementById('chat-file').click()" style="background:none; border:none; color:var(--neon-b); font-size:1.4rem; padding:0 5px; cursor:pointer;"><i class="ri-image-add-line"></i></button>
+                            <input type="file" id="chat-file" style="display:none;" onchange="sendChatImage()">
+                            
+                            <input id="msg-input" placeholder="Message..." style="flex:1; background:var(--bg); border:1px solid var(--border); padding:12px 15px; color:white; border-radius:12px;">
+                            <button class="nav-btn active" style="width:45px; height:45px; border-radius:12px; margin-bottom:0;"><i class="ri-send-plane-fill"></i></button>
+                        </div>
                     </form>
                 </div>
-
-                <div id="view-create-group" class="hidden" style="padding:20px;">
-                    <h3>New Channel</h3>
-                    <input id="new-group-name" placeholder="Channel Name">
-                    <div style="display:flex; gap:5px;">
-                        <input id="member-email" placeholder="Add Email" style="margin:0;">
-                        <button class="btn-main" style="width:auto;" onclick="checkMember()">Add</button>
-                    </div>
-                    <div id="member-tags" style="margin:10px 0; display:flex; gap:5px; flex-wrap:wrap;"></div>
-                    <button class="btn-main" onclick="createGroup()">Initialize</button>
-                    <button class="btn-main" style="background:transparent; color:var(--muted); margin-top:10px;" onclick="showChatList()">Cancel</button>
-                 </div>
             </div>
-        </div>
+        </section>
+
     </div>
 
-    <div class="panel-overlay" id="panel-admin">
-        <div class="slide-panel">
-            <div class="panel-header">
-                <h2 style="color:var(--danger)">GOD MODE</h2>
-                <button onclick="togglePanel('admin')" style="background:none; border:none; color:var(--text); cursor:pointer;"><i class="ri-close-line" style="font-size:1.5rem"></i></button>
-            </div>
-            <div class="panel-body">
-                <div style="display:flex; gap:10px; margin-bottom:20px;">
-                    <button class="btn-main" onclick="loadAdminPending()">Pending</button>
-                    <button class="btn-main" style="background:var(--border);" onclick="loadAdminUsers()">Users</button>
+    <!-- === MODALS === -->
+       <!-- AUTH MODAL -->
+    <div id="modal-auth" class="modal-overlay">
+        <div class="modal-card">
+            <h1 style="text-align:center; margin-bottom:30px; font-weight:900; letter-spacing:3px; color:white;">SERDIT</h1>
+            
+            <!-- Logged Out View -->
+            <div id="auth-forms">
+                <div class="input-group"><i class="ri-mail-line" style="color:var(--muted)"></i><input id="email" placeholder="Email"></div>
+                <div class="input-group"><i class="ri-lock-line" style="color:var(--muted)"></i><input id="pass" type="password" placeholder="Password"></div>
+                <button class="btn-main btn-neon" onclick="login()">Connect</button>
+                <div style="display:flex; gap:10px; margin-top:15px;">
+                    <input id="new-user" placeholder="Choose Callsign" style="background:var(--bg); border:1px solid var(--border); padding:12px; flex:1; color:white; border-radius:10px;">
+                    <button class="btn-main" onclick="register()" style="flex:1; margin-top:0; background:var(--surface-2); border:1px solid var(--border); color:var(--text);">Register</button>
                 </div>
-                <div id="admin-view"></div>
+            </div>
+
+            <!-- Logged In View -->
+            <div id="profile-view" class="hidden" style="text-align:center;">
+                <div style="width:80px; height:80px; background:var(--surface-2); border:1px solid var(--neon-b); border-radius:50%; margin:0 auto 20px; display:flex; align-items:center; justify-content:center; font-size:2rem; font-weight:bold; color:var(--neon-b);" id="prof-initial">U</div>
+                <h2 id="prof-name" style="margin-bottom:5px;">User</h2>
+                <p id="prof-role" style="color:var(--muted); margin-bottom:20px; font-size:0.9rem;">CITIZEN</p>
+                <button class="btn-main" onclick="logout()" style="background:var(--danger); color:white;">Disconnect</button>
             </div>
         </div>
     </div>
 
-    <div class="lightbox-overlay" id="modal-light">
-        <div class="lb-image-container">
-            <img id="light-img" src="">
-            <button onclick="togglePanel('light')" style="position:absolute; top:20px; right:20px; background:none; border:none; color:white; font-size:2rem; cursor:pointer;"><i class="ri-close-line"></i></button>
+    <!-- NEW CHAT MODAL -->
+    <div id="modal-new-chat" class="modal-overlay">
+        <div class="modal-card">
+            <h3 style="margin-bottom:20px;">New Transmission</h3>
+            <div class="input-group">
+                <input id="search-email" placeholder="Recipient Email (Exact)">
+                <button onclick="startDM()" style="background:var(--neon-b); border:none; color:white; padding:0 15px; border-radius:8px; font-weight:bold; cursor:pointer;">DM</button>
+            </div>
+            
+            <div style="width:100%; height:1px; background:var(--border); margin:25px 0;"></div>
+            
+            <h3 style="margin-bottom:20px;">Create Channel</h3>
+            <div class="input-group">
+                <input id="new-group-name" placeholder="Channel Name">
+            </div>
+            <button class="btn-main" onclick="createGroup()">Initialize Channel</button>
+            <button onclick="toggleModal('new-chat')" style="width:100%; padding:15px; background:none; border:none; color:var(--muted); margin-top:10px; cursor:pointer;">Cancel</button>
         </div>
-        <div class="lb-sidebar">
-            <div class="lb-header">
-                <h2 id="light-title" style="font-family:'Space Grotesk';">Title</h2>
-                <div style="display:flex; justify-content:space-between; margin-top:10px;">
-                    <span id="light-author" style="color:var(--acid);">Author</span>
-                    <button onclick="toggleVote()" style="background:none; border:none; color:var(--text); cursor:pointer; display:flex; align-items:center; gap:5px;">
-                        <i id="vote-icon" class="ri-heart-3-line"></i> <span id="vote-count">0</span>
+    </div>
+
+    <!-- UPLOAD MODAL -->
+    <div id="modal-upload" class="modal-overlay">
+        <div class="modal-card">
+            <h3>Upload Artifact</h3>
+            <div style="border:2px dashed var(--border); padding:40px; text-align:center; margin:20px 0; border-radius:16px; cursor:pointer; transition:0.2s;" onclick="document.getElementById('fileIn').click()" onmouseover="this.style.borderColor='var(--neon-b)'" onmouseout="this.style.borderColor='var(--border)'">
+                <i class="ri-upload-cloud-line" style="font-size:2.5rem; color:var(--neon-b); margin-bottom:10px; display:block;"></i>
+                <p style="font-size:0.9rem; color:var(--muted);">Tap to Select File</p>
+            </div>
+            <input type="file" id="fileIn" style="display:none;">
+            <div class="input-group">
+                <input id="up-title" placeholder="Artifact Title">
+            </div>
+            <button class="btn-main btn-neon" onclick="uploadArt()">Broadcast to Grid</button>
+            <button onclick="toggleModal('upload')" style="width:100%; padding:15px; background:none; border:none; color:var(--muted); margin-top:10px; cursor:pointer;">Close</button>
+        </div>
+    </div>
+
+    <!-- ADMIN GOD MODE -->
+    <div id="modal-admin" class="modal-overlay">
+        <div class="modal-card" style="max-width:600px; height:80vh; display:flex; flex-direction:column;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 style="color:var(--danger)">GOD MODE</h2>
+                <button onclick="toggleModal('admin')" style="background:none; border:none; color:white; font-size:1.5rem;"><i class="ri-close-line"></i></button>
+            </div>
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <button class="spy-btn" onclick="renderAdminSpy('users')">Users</button>
+                <button class="spy-btn" onclick="renderAdminSpy('dms')">Spy DMs</button>
+                <button class="spy-btn" onclick="renderAdminSpy('groups')">Spy Groups</button>
+            </div>
+            <div id="admin-content" style="flex:1; overflow-y:auto; background:var(--bg); padding:15px; border-radius:12px; border:1px solid var(--border);"></div>
+        </div>
+    </div>
+
+    <!-- LIGHTBOX -->
+    <div id="modal-lightbox" class="modal-overlay" onclick="if(event.target===this) toggleModal('lightbox')">
+        <div class="modal-card" style="max-width:800px; padding:0; overflow:hidden; background:black; border:none;">
+            <div style="position:relative;">
+                <img id="lb-img" style="width:100%; max-height:60vh; object-fit:contain; background:radial-gradient(circle, #222, #000);">
+                <button onclick="toggleModal('lightbox')" style="position:absolute; top:15px; right:15px; background:rgba(0,0,0,0.5); border:none; color:white; width:40px; height:40px; border-radius:50%; cursor:pointer;"><i class="ri-close-line" style="font-size:1.5rem;"></i></button>
+            </div>
+            <div style="padding:25px; background:var(--surface);">
+                <div style="display:flex; justify-content:space-between; align-items:start;">
+                    <div>
+                        <h2 id="lb-title" style="margin-bottom:5px;">Title</h2>
+                        <p id="lb-author" style="color:var(--neon-b); font-size:0.9rem;">Author</p>
+                    </div>
+                    <button onclick="voteImg()" style="background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--text); padding:8px 15px; border-radius:20px; display:flex; gap:8px; align-items:center; cursor:pointer; transition:0.2s;">
+                        <i class="ri-heart-3-fill" style="color:var(--danger);"></i> <span id="lb-votes">0</span>
                     </button>
                 </div>
+                <hr style="border:0; border-top:1px solid var(--border); margin:20px 0;">
+                <button onclick="viewUserGallery()" style="width:100%; padding:12px; background:var(--surface-2); color:var(--text); border:1px solid var(--border); border-radius:10px; cursor:pointer;">Filter: View All by User</button>
             </div>
-            <div id="comments-list" style="flex:1; overflow-y:auto; padding:20px;"></div>
-            <form onsubmit="postComment(event)" style="padding:20px; border-top:1px solid var(--border);">
-                <div style="display:flex; gap:10px;">
-                    <input id="comment-in" placeholder="Critique..." style="margin:0;">
-                    <button class="btn-main" style="width:auto;">Post</button>
-                </div>
-            </form>
         </div>
     </div>
 
     <script>
-        // --- CONFIGURATION ---
-         const firebaseConfig = {
+        const firebaseConfig = {
     apiKey: "AIzaSyAtqCvW8QW76WMsweQlHEMbfxJRNWSsUak",
     authDomain: "serdit-1e0aa.firebaseapp.com",
     databaseURL: "https://serdit-1e0aa-default-rtdb.firebaseio.com",
@@ -409,29 +412,27 @@
         const CLOUD_NAME = "drnmtmsnn"; 
         const PRESET = "se_reddit";
         const ADMIN_EMAIL = "falullah@admin.com"; 
-        
-
+       
         // --- INIT ---
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.database();
-
+        
         let state = {
-            user: null,
-            profile: null,
-            activeChat: null,
-            activeImage: null,
-            pendingMembers: [],
-            images: [], // For sorting
-            filter: 'all' // all | user_uid
+            user: null, profile: null, activeChat: null, chatType: 'dm',
+            images: [], filterUser: null
         };
 
-        // --- CORE LOGIC ---
+        // --- AUTH & LOAD ---
         auth.onAuthStateChanged(async u => {
             state.user = u;
+            const authBtns = document.querySelectorAll('.auth-btn-glow');
+            const adminBtns = document.querySelectorAll('#desk-admin-btn, #mob-admin-btn');
+
             if(u) {
+                // Logged In
                 const snap = await db.ref(`users/${u.uid}`).once('value');
-                state.profile = snap.val() || { role: 'pending', username: 'New User' };
+                state.profile = snap.val() || { role: 'pending', username: 'Anon' };
                 
                 // Force Admin
                 if(u.email === ADMIN_EMAIL && state.profile.role !== 'admin') {
@@ -439,368 +440,344 @@
                     state.profile.role = 'admin';
                 }
 
-                // Update UI
-                if(state.profile.role === 'admin') document.getElementById('btn-admin').classList.remove('hidden');
-                
-                // Load Data
-                loadChats();
-            } else {
-                state.profile = null;
-                document.getElementById('btn-admin').classList.add('hidden');
-            }
-        });
+                // Show Admin Button ONLY if admin
+                if(state.profile.role === 'admin') {
+                    adminBtns.forEach(btn => btn.classList.remove('hidden'));
+                }
 
-        // Gallery Listener with Sorting
-        db.ref('images').on('value', snap => {
-            const data = snap.val();
-            state.images = data ? Object.keys(data).map(k => ({id:k, ...data[k]})) : [];
-            renderGallery();
-        });
-
-        function renderGallery() {
-            const grid = document.getElementById('viewport');
-            grid.innerHTML = '';
-            
-            // 1. Filter
-            let displayList = state.images;
-            if(state.filter !== 'all') {
-                displayList = displayList.filter(img => img.uid === state.filter);
-                document.getElementById('header-ctx').innerText = "UserProfile";
-            } else {
-                document.getElementById('header-ctx').innerText = "Feed";
-            }
-
-            // 2. Sort
-            // Default to 'new' (reverse chronological) handled by reverse()
-            // If trending, sort by voteCount
-            if(document.querySelector('.filter-chip.active').innerText === 'Trending') {
-                displayList.sort((a,b) => (b.voteCount||0) - (a.voteCount||0));
-            } else {
-                displayList.sort((a,b) => b.ts - a.ts);
-            }
-
-            if(displayList.length === 0) {
-                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; margin-top:50px; color:var(--muted);">No artifacts found.</div>';
-                return;
-            }
-
-            displayList.forEach(img => {
-                const card = document.createElement('div');
-                card.className = 'art-card';
-                card.innerHTML = `
-                    <img src="${img.url}" loading="lazy">
-                    <div class="card-meta">
-                        <div>
-                            <div class="card-title">${img.title}</div>
-                            <div class="card-author">${img.author}</div>
-                        </div>
-                        <div style="font-size:0.8rem; color:var(--acid);">
-                            <i class="ri-heart-fill"></i> ${img.voteCount || 0}
-                        </div>
-                    </div>
-                `;
-                card.onclick = () => openLightbox(img);
-                grid.appendChild(card);
-            });
-        }
-
-        function sortGallery(type) {
-            document.querySelectorAll('.filter-chip').forEach(el => el.classList.remove('active'));
-            if(type === 'new') document.querySelectorAll('.filter-chip')[0].classList.add('active');
-            else document.querySelectorAll('.filter-chip')[1].classList.add('active');
-            renderGallery();
-        }
-
-        function setFilter(uid) {
-            state.filter = uid;
-            renderGallery();
-        }
-
-        // --- AUTH & PANEL LOGIC ---
-        function togglePanel(id) {
-            // Close others first
-            document.querySelectorAll('.panel-overlay, .lightbox-overlay').forEach(el => {
-                if(el.id !== `panel-${id}` && el.id !== `modal-${id}`) el.classList.remove('visible');
-            });
-
-            // Special handling for auth
-            if(id === 'messenger' || id === 'upload') {
-                if(!state.user) { togglePanel('auth'); return; }
-            }
-
-            const el = document.getElementById(id === 'light' ? 'modal-light' : `panel-${id}`);
-            if(el) el.classList.toggle('visible');
-
-            // Reset views
-            if(id === 'auth' && state.user) switchAuthView('profile');
-        }
-
-        function handleProfileClick() {
-            togglePanel('auth');
-            if(state.user) {
-                document.getElementById('profile-name').innerText = state.profile.username;
-                document.getElementById('profile-role').innerText = state.profile.role.toUpperCase();
-                document.getElementById('profile-avatar').innerText = state.profile.username[0].toUpperCase();
-                
-                const limit = state.profile.role === 'admin' ? '∞' : (state.profile.uploadLimit || 5);
-                document.getElementById('profile-limit').innerText = `Uploads: ${state.profile.uploadedCount||0} / ${limit}`;
-            }
-        }
-
-        function switchAuthView(view) {
-            ['login', 'register', 'profile'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
-            document.getElementById(`view-${view}`).classList.remove('hidden');
-        }
-
-        async function handleLogin() {
-            try {
-                await auth.signInWithEmailAndPassword(
-                    document.getElementById('login-email').value,
-                    document.getElementById('login-pass').value
-                );
-                togglePanel('auth');
-            } catch(e) { alert(e.message); }
-        }
-
-        async function handleRegister() {
-            const user = document.getElementById('reg-user').value;
-            const email = document.getElementById('reg-email').value;
-            const pass = document.getElementById('reg-pass').value;
-            try {
-                const cred = await auth.createUserWithEmailAndPassword(email, pass);
-                const role = (email === ADMIN_EMAIL) ? 'admin' : 'pending';
-                await db.ref(`users/${cred.user.uid}`).set({
-                    username: user, email, password: pass, role,
-                    createdAt: Date.now(), uploadLimit: 5, uploadedCount: 0
+                // Update Auth Button State (Remove Glow, Change Icon?)
+                authBtns.forEach(btn => {
+                    btn.classList.remove('auth-btn-glow');
+                    btn.style.color = "var(--neon-b)";
                 });
-                alert(role === 'admin' ? "Admin Access." : "Awaiting Approval.");
-                togglePanel('auth');
-            } catch(e) { alert(e.message); }
+
+                // Prepare Profile Modal
+                document.getElementById('auth-forms').classList.add('hidden');
+                document.getElementById('profile-view').classList.remove('hidden');
+                document.getElementById('prof-name').innerText = state.profile.username;
+                document.getElementById('prof-role').innerText = state.profile.role.toUpperCase();
+                document.getElementById('prof-initial').innerText = state.profile.username[0].toUpperCase();
+
+                loadInbox();
+                toggleModal('auth'); // Close modal if open on load
+            } else {
+                // Logged Out
+                state.profile = null;
+                adminBtns.forEach(btn => btn.classList.add('hidden')); // HIDE ADMIN
+                
+                // Add Glow to Auth Buttons
+                authBtns.forEach(btn => {
+                    btn.classList.add('auth-btn-glow');
+                    btn.style.color = "var(--neon-alert)";
+                });
+
+                document.getElementById('auth-forms').classList.remove('hidden');
+                document.getElementById('profile-view').classList.add('hidden');
+            }
+            // Always load public gallery
+            loadGallery();
+        });
+
+        // --- NAVIGATION ---
+        function switchView(id) {
+            document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
+            document.getElementById(`view-${id}`).classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(e => e.classList.remove('active'));
+            
+            // Activate PC and Mobile buttons
+            if(id === 'gallery') {
+                document.getElementById('nav-gallery').classList.add('active');
+                document.getElementById('mob-nav-gallery').classList.add('active');
+                loadGallery();
+            } else if (id === 'messaging') {
+                document.getElementById('nav-msg').classList.add('active');
+                document.getElementById('mob-nav-msg').classList.add('active');
+            }
         }
 
-        function logout() { auth.signOut(); togglePanel('auth'); }
+        function toggleModal(id) {
+            const el = document.getElementById(`modal-${id}`);
+            el.classList.contains('active') ? el.classList.remove('active') : el.classList.add('active');
+        }
 
-        // --- MESSENGER ---
-        function loadChats() {
+        // --- MESSAGING SYSTEM ---
+        function filterChats(type) {
+            state.chatType = type;
+            document.querySelectorAll('.chat-tab').forEach(e => e.classList.remove('active'));
+            event.target.classList.add('active');
+            loadInbox();
+        }
+
+        function loadInbox() {
             if(!state.user) return;
-            const list = document.getElementById('view-chat-list');
-            list.innerHTML = '';
-            
-            // Helper to render
-            const add = (id, name) => {
-                const div = document.createElement('div');
-                div.className = 'chat-list-item';
-                div.innerHTML = `<div class="chat-avatar">${name[0]}</div><div><strong>${name}</strong></div>`;
-                div.onclick = () => openThread(id, name);
-                list.appendChild(div);
-            };
+            const container = document.getElementById('inbox-container');
+            container.innerHTML = ''; // Don't clear immediately to prevent flash? Nah, simplicity.
 
-            add('global_chat', 'Global Lobby');
-            db.ref(`users/${state.user.uid}/chats`).on('value', snap => {
-                if(snap.exists()) {
-                    Object.keys(snap.val()).forEach(async gid => {
-                        const info = await db.ref(`groups/${gid}/info`).once('value');
-                        if(info.exists()) add(gid, info.val().name);
-                    });
+            const path = state.chatType === 'dm' ? `users/${state.user.uid}/dms` : `users/${state.user.uid}/chats`;
+            
+            db.ref(path).on('value', async snap => {
+                container.innerHTML = '';
+                if(!snap.exists()) return container.innerHTML = '<div style="padding:20px; color:gray; text-align:center;">Empty</div>';
+                
+                const ids = Object.keys(snap.val());
+                for(const id of ids) {
+                    let name = "Unknown";
+                    if(state.chatType === 'dm') {
+                        const chatSnap = await db.ref(`dms/${id}`).once('value');
+                        if(chatSnap.exists()) {
+                            const mems = Object.keys(chatSnap.val().members);
+                            const otherId = mems.find(uid => uid !== state.user.uid) || state.user.uid;
+                            const uSnap = await db.ref(`users/${otherId}`).once('value');
+                            name = uSnap.val()?.username || "User";
+                        }
+                    } else {
+                        const gSnap = await db.ref(`groups/${id}/info`).once('value');
+                        name = gSnap.val()?.name || "Group";
+                    }
+
+                    const div = document.createElement('div');
+                    div.className = 'inbox-item';
+                    div.innerHTML = `<div class="avatar">${name[0]}</div><div><strong>${name}</strong><br><small style="color:var(--muted)">Encrypted</small></div>`;
+                    div.onclick = () => openChat(id, name);
+                    container.appendChild(div);
                 }
             });
         }
 
-        function openThread(id, name) {
+        function openChat(id, name) {
             state.activeChat = id;
-            document.getElementById('view-chat-list').classList.add('hidden');
-            document.getElementById('view-thread').classList.remove('hidden');
-            document.getElementById('thread-title').innerText = name;
+            document.getElementById('chat-header-name').innerText = name;
+            document.getElementById('msg-feed').innerHTML = '';
             
-            const feed = document.getElementById('msg-feed');
-            feed.innerHTML = '';
-            
-            db.ref(`groups/${id}/messages`).limitToLast(50).on('child_added', snap => {
-                const msg = snap.val();
-                const isMine = msg.uid === state.user.uid;
-                const row = document.createElement('div');
-                row.className = `msg-row ${isMine ? 'mine' : ''}`;
-                
-                let content = `<div style="font-weight:bold; font-size:0.7rem; margin-bottom:2px; color:var(--acid);">${msg.user}</div>`;
-                if(msg.image) content += `<img src="${msg.image}" class="msg-img" onclick="window.open(this.src)">`;
-                content += `<div>${msg.text || ''}</div>`;
-                
-                row.innerHTML = `<div class="msg-bubble">${content}</div>`;
-                feed.appendChild(row);
-                feed.scrollTop = feed.scrollHeight;
+            if(window.innerWidth < 768) document.getElementById('chat-stage').classList.add('open');
+
+            const root = state.chatType === 'dm' ? 'dms' : 'groups';
+            db.ref(`${root}/${id}/messages`).limitToLast(50).on('child_added', snap => {
+                renderMessage(snap.val());
             });
         }
 
-        function showChatList() {
-            document.getElementById('view-chat-list').classList.remove('hidden');
-            document.getElementById('view-thread').classList.add('hidden');
-            document.getElementById('view-create-group').classList.add('hidden');
-            if(state.activeChat) db.ref(`groups/${state.activeChat}/messages`).off();
-            state.activeChat = null;
+        function renderMessage(msg) {
+            if(msg.expiresAt && Date.now() > msg.expiresAt) return; 
+
+            const isMine = state.user && msg.uid === state.user.uid;
+            const div = document.createElement('div');
+            div.className = `bubble ${isMine ? 'mine' : 'theirs'}`;
+            
+            let content = `<div style="font-size:0.7rem; font-weight:bold; margin-bottom:4px; opacity:0.8;">${msg.user}</div>`;
+            if(msg.image) content += `<img src="${msg.image}" class="msg-img" onclick="window.open(this.src)">`;
+            content += `<div>${msg.text || ''}</div>`;
+            
+            if(msg.expiresAt) {
+                const hours = Math.round((msg.expiresAt - Date.now())/3600000);
+                content += `<div class="timer-badge"><i class="ri-time-line"></i> ${hours}h</div>`;
+            }
+
+            div.innerHTML = content;
+            const feed = document.getElementById('msg-feed');
+            feed.appendChild(div);
+            feed.scrollTop = feed.scrollHeight;
+        }
+
+        function closeChatMobile() { document.getElementById('chat-stage').classList.remove('open'); }
+
+        async function startDM() {
+            const email = document.getElementById('search-email').value;
+            const snap = await db.ref('users').orderByChild('email').equalTo(email).once('value');
+            if(snap.exists()) {
+                const otherUid = Object.keys(snap.val())[0];
+                const myUid = state.user.uid;
+                const chatId = [myUid, otherUid].sort().join('_');
+                
+                const updates = {};
+                updates[`dms/${chatId}/members/${myUid}`] = true;
+                updates[`dms/${chatId}/members/${otherUid}`] = true;
+                updates[`users/${myUid}/dms/${chatId}`] = true;
+                updates[`users/${otherUid}/dms/${chatId}`] = true;
+                
+                await db.ref().update(updates);
+                toggleModal('new-chat');
+                filterChats('dm');
+            } else { alert("User not found"); }
+        }
+
+        async function createGroup() {
+            const name = document.getElementById('new-group-name').value;
+            const gid = db.ref('groups').push().key;
+            const updates = {};
+            updates[`groups/${gid}/info`] = { name: name, members: { [state.user.uid]: true } };
+            updates[`users/${state.user.uid}/chats/${gid}`] = true;
+            await db.ref().update(updates);
+            toggleModal('new-chat');
+            filterChats('group');
         }
 
         function sendMessage(e) {
             e.preventDefault();
             if(!state.activeChat) return;
             const txt = document.getElementById('msg-input').value;
+            const timer = parseInt(document.getElementById('timer-select').value);
             if(!txt) return;
-            db.ref(`groups/${state.activeChat}/messages`).push({
-                text: txt, user: state.profile.username, uid: state.user.uid, ts: Date.now()
-            });
+            
+            const payload = {
+                text: txt, uid: state.user.uid, user: state.profile.username, ts: Date.now()
+            };
+            if(timer > 0) payload.expiresAt = Date.now() + timer;
+
+            const root = state.chatType === 'dm' ? 'dms' : 'groups';
+            db.ref(`${root}/${state.activeChat}/messages`).push(payload);
             document.getElementById('msg-input').value = '';
         }
 
         async function sendChatImage() {
             const file = document.getElementById('chat-file').files[0];
+            const timer = parseInt(document.getElementById('timer-select').value);
             if(!file || !state.activeChat) return;
+
             try {
                 const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', PRESET);
                 const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {method:'POST', body:fd});
                 const data = await res.json();
-                await db.ref(`groups/${state.activeChat}/messages`).push({
-                    user: state.profile.username, uid: state.user.uid, ts: Date.now(),
-                    image: data.secure_url, text: "Image Attachment"
+                
+                const payload = {
+                    text: "", image: data.secure_url,
+                    uid: state.user.uid, user: state.profile.username, ts: Date.now()
+                };
+                if(timer > 0) payload.expiresAt = Date.now() + timer;
+
+                const root = state.chatType === 'dm' ? 'dms' : 'groups';
+                db.ref(`${root}/${state.activeChat}/messages`).push(payload);
+            } catch(e) { alert("Upload fail"); }
+        }
+        
+        // --- PUBLIC GALLERY ---
+        function loadGallery() {
+            db.ref('images').on('value', snap => {
+                const grid = document.getElementById('gallery-grid');
+                grid.innerHTML = '';
+                const data = snap.val();
+                if(!data) return grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:gray;">Void Empty. Broadcast Something.</div>';
+                
+                let list = Object.keys(data).map(k => ({id:k, ...data[k]}));
+                
+                if(state.filterUser) {
+                    list = list.filter(i => i.uid === state.filterUser);
+                }
+
+                if(document.getElementById('gallery-filter').value === 'trending') {
+                    list.sort((a,b) => (b.voteCount||0) - (a.voteCount||0));
+                } else {
+                    list.sort((a,b) => b.ts - a.ts);
+                }
+
+                list.forEach(img => {
+                    const el = document.createElement('div');
+                    el.className = 'art-card';
+                    el.innerHTML = `
+                        <img src="${img.url}">
+                        <div class="art-overlay">
+                            <div style="font-weight:bold; color:white;">${img.title}</div>
+                            <div style="font-size:0.8rem; color:var(--neon-b)">${img.author}</div>
+                        </div>
+                    `;
+                    el.onclick = () => openLightbox(img);
+                    grid.appendChild(el);
                 });
-            } catch(e) {}
-        }
-        
-        function initCreateGroup() {
-            document.getElementById('view-chat-list').classList.add('hidden');
-            document.getElementById('view-create-group').classList.remove('hidden');
-        }
-        
-        async function checkMember() {
-            const email = document.getElementById('member-email').value;
-            const snap = await db.ref('users').orderByChild('email').equalTo(email).once('value');
-            if(snap.exists()) {
-                const uid = Object.keys(snap.val())[0];
-                const u = snap.val()[uid];
-                state.pendingMembers.push({uid, name:u.username});
-                const tag = document.createElement('div');
-                tag.style = "background:var(--border); padding:5px; font-size:0.8rem;";
-                tag.innerText = u.username;
-                document.getElementById('member-tags').appendChild(tag);
-                document.getElementById('member-email').value = '';
-            } else alert("User not found");
-        }
-        
-        async function createGroup() {
-            const name = document.getElementById('new-group-name').value;
-            const gid = db.ref('groups').push().key;
-            const members = {[state.user.uid]: true};
-            const updates = {};
-            updates[`groups/${gid}/info`] = {name, members};
-            updates[`users/${state.user.uid}/chats/${gid}`] = true;
-            state.pendingMembers.forEach(m => {
-                updates[`groups/${gid}/info/members/${m.uid}`] = true;
-                updates[`users/${m.uid}/chats/${gid}`] = true;
             });
-            await db.ref().update(updates);
-            state.pendingMembers = [];
-            showChatList();
+        }
+        
+        function openLightbox(img) {
+            state.activeImage = img;
+            document.getElementById('lb-img').src = img.url;
+            document.getElementById('lb-title').innerText = img.title;
+            document.getElementById('lb-author').innerText = img.author;
+            document.getElementById('lb-votes').innerText = img.voteCount || 0;
+            toggleModal('lightbox');
+        }
+
+        function viewUserGallery() {
+            state.filterUser = state.activeImage.uid;
+            toggleModal('lightbox');
+            switchView('gallery');
+            alert(`Filter active: ${state.activeImage.author}`);
+        }
+
+        function voteImg() {
+             db.ref(`images/${state.activeImage.id}/voteCount`).transaction(c => (c||0)+1);
+             document.getElementById('lb-votes').innerText = (state.activeImage.voteCount||0) + 1;
         }
 
         // --- UPLOAD ---
         async function uploadArt() {
-            if(state.profile.role !== 'approved' && state.profile.role !== 'admin') return alert("Pending Approval.");
-            if(state.profile.role !== 'admin') {
-                if((state.profile.uploadedCount || 0) >= (state.profile.uploadLimit || 5)) return alert("Limit Reached");
-            }
+            if(!state.user) return toggleModal('auth');
+            if(state.profile.role !== 'approved' && state.profile.role !== 'admin') return alert("Pending Approval");
+            
             const file = document.getElementById('fileIn').files[0];
             const title = document.getElementById('up-title').value;
             if(!file) return;
 
-            document.getElementById('upload-status').innerText = "Broadcasting...";
-            try {
-                const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', PRESET);
-                const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {method:'POST', body:fd});
-                const data = await res.json();
-                await db.ref('images').push({
-                    url: data.secure_url, title, author: state.profile.username,
-                    uid: state.user.uid, ts: Date.now(), voteCount: 0
-                });
-                await db.ref(`users/${state.user.uid}/uploadedCount`).set((state.profile.uploadedCount||0)+1);
-                document.getElementById('upload-status').innerText = "Signal Locked.";
-                setTimeout(() => { togglePanel('upload'); document.getElementById('upload-status').innerText=''; }, 1000);
-            } catch(e) { alert(e); }
-        }
-
-        // --- LIGHTBOX ---
-        function openLightbox(img) {
-            state.activeImage = img;
-            document.getElementById('light-img').src = img.url;
-            document.getElementById('light-title').innerText = img.title;
-            document.getElementById('light-author').innerText = img.author;
-            document.getElementById('vote-count').innerText = img.voteCount || 0;
-            togglePanel('light');
+            const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', PRESET);
+            const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {method:'POST', body:fd});
+            const data = await res.json();
             
-            const list = document.getElementById('comments-list');
-            list.innerHTML = 'Decrypting...';
-            db.ref(`comments/${img.id}`).on('value', snap => {
-                list.innerHTML = '';
-                if(snap.exists()) {
-                    snap.forEach(c => {
-                        const v = c.val();
-                        const d = document.createElement('div');
-                        d.style = "margin-bottom:15px; border-left:2px solid var(--border); padding-left:10px;";
-                        d.innerHTML = `<div style="font-size:0.75rem; color:var(--acid);">${v.author}</div><div>${v.text}</div>`;
-                        list.appendChild(d);
-                    });
-                } else list.innerHTML = '<div style="color:var(--muted)">No transmissions.</div>';
+            await db.ref('images').push({
+                url: data.secure_url, title, author: state.profile.username, uid: state.user.uid, ts: Date.now(), voteCount: 0
             });
-        }
-        
-        function postComment(e) {
-            e.preventDefault();
-            const txt = document.getElementById('comment-in').value;
-            if(!txt) return;
-            db.ref(`comments/${state.activeImage.id}`).push({
-                text: txt, author: state.profile.username, uid: state.user.uid, ts: Date.now()
-            });
-            document.getElementById('comment-in').value = '';
-        }
-        
-        function toggleVote() {
-             db.ref(`images/${state.activeImage.id}/voteCount`).transaction(c => (c||0) + 1);
+            toggleModal('upload');
+            alert("Artifact Broadcasted.");
         }
 
-        // --- ADMIN ---
-        function loadAdminPending() {
-            const v = document.getElementById('admin-view'); v.innerHTML = 'Scanning...';
-            db.ref('users').orderByChild('role').equalTo('pending').once('value', snap => {
-                v.innerHTML = '';
-                snap.forEach(c => {
-                   const u = c.val();
-                   v.innerHTML += `
-                   <div class="user-row">
-                       <div>${u.username}<br><small>${u.email}</small><br><small style="color:var(--danger)">${u.password}</small></div>
-                       <button class="limit-btn" onclick="setUserRole('${c.key}','approved')"><i class="ri-check-line"></i></button>
-                   </div>`;
+        // --- AUTH ---
+        async function login() {
+            try { await auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value); }
+            catch(e) { alert(e.message); }
+        }
+        async function register() {
+            const u = document.getElementById('new-user').value;
+            const e = document.getElementById('email').value;
+            const p = document.getElementById('pass').value;
+            try {
+                const c = await auth.createUserWithEmailAndPassword(e, p);
+                const r = (e === ADMIN_EMAIL) ? 'admin' : 'pending';
+                await db.ref(`users/${c.user.uid}`).set({ username: u, email: e, password: p, role: r });
+            } catch(er) { alert(er.message); }
+        }
+        function logout() { auth.signOut(); toggleModal('auth'); }
+
+        // --- ADMIN GOD MODE ---
+        function renderAdminSpy(mode) {
+            const c = document.getElementById('admin-content');
+            c.innerHTML = 'Scanning Database...';
+            
+            db.ref(mode).once('value', snap => {
+                c.innerHTML = `<table class="spy-table">`;
+                snap.forEach(child => {
+                    const k = child.key;
+                    const v = child.val();
+                    let info = "";
+                    
+                    if(mode === 'users') info = `<div style="color:var(--neon-b)">${v.username}</div><div style="font-size:0.7rem; color:gray">${v.email} // ${v.password}</div>`;
+                    else if(mode === 'dms') info = `Chat ID: <span style="font-size:0.7rem">${k}</span>`;
+                    else if(mode === 'groups') info = `${v.info.name}`;
+
+                    const row = document.createElement('tr');
+                    row.className = 'spy-row';
+                    row.innerHTML = `<td>${info}</td><td><button class="spy-btn" onclick="spyOpen('${mode}', '${k}')">Open</button></td>`;
+                    c.appendChild(row);
                 });
             });
         }
-        function loadAdminUsers() {
-            const v = document.getElementById('admin-view'); v.innerHTML = 'Scanning...';
-            db.ref('users').once('value', snap => {
-                v.innerHTML = '';
-                snap.forEach(c => {
-                    const u = c.val();
-                    const limit = u.uploadLimit || 5;
-                    v.innerHTML += `
-                    <div class="user-row">
-                        <div>${u.username}<br><small>${u.password}</small></div>
-                        <div class="ctrl-group">
-                            <button class="limit-btn" onclick="updLim('${c.key}',${limit-1})">-</button>
-                            <span class="limit-val">${limit}</span>
-                            <button class="limit-btn" onclick="updLim('${c.key}',${limit+1})">+</button>
-                        </div>
-                    </div>`;
-                });
-            });
+
+        function spyOpen(mode, id) {
+            if(mode === 'users') {
+                 db.ref(`users/${id}/role`).set('approved');
+                 alert("User Approved");
+            } else {
+                toggleModal('admin'); 
+                state.chatType = (mode === 'dms') ? 'dm' : 'group';
+                openChat(id, "GOD MODE VIEW");
+            }
         }
-        window.setUserRole = (uid,r) => { db.ref(`users/${uid}/role`).set(r); loadAdminPending(); };
-        window.updLim = (uid,l) => { db.ref(`users/${uid}/uploadLimit`).set(l); loadAdminUsers(); };
     </script>
 </body>
-</html> 
-        
+</html>
