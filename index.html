@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SERDIT | The Void</title>
+    <title>SERDIT | Final</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
@@ -13,23 +13,21 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
     <style>
-        /* --- THEME: THE VOID (v4 Refined) --- */
+        /* --- THEME: DEEP VOID --- */
         :root {
-            --bg: #030305;
-            --surface: #0a0a0f;
-            --surface-2: #13131a;
-            --border: #1f1f2e;
-            
-            --neon-p: #a855f7; /* Purple */
-            --neon-b: #3b82f6; /* Blue */
-            --neon-alert: #f43f5e; /* Red for Login/Admin */
-            --text: #e2e8f0;
+            --bg: #050507;
+            --surface: #0e0e14;
+            --surface-2: #181824;
+            --border: #2a2a3d;
+            --neon-p: #c084fc;
+            --neon-b: #60a5fa;
+            --danger: #ef4444;
+            --success: #10b981;
+            --text: #f1f5f9;
             --muted: #64748b;
-            
-            --nav-height: 70px;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; outline: none; }
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
         
         body {
             font-family: 'Outfit', sans-serif;
@@ -38,338 +36,321 @@
             height: 100vh;
             overflow: hidden;
             display: flex;
-            background-image: radial-gradient(circle at 10% 20%, rgba(168, 85, 247, 0.08) 0%, transparent 25%),
-                              radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 25%);
         }
 
-        /* --- LAYOUT STRUCTURE --- */
-        .app-container { flex: 1; display: flex; position: relative; height: 100%; width: 100%; }
-        
-        /* PC Sidebar */
+        /* --- TOASTS --- */
+        #toast-container { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; width: 90%; max-width: 300px; }
+        .toast {
+            background: rgba(20, 20, 30, 0.95); backdrop-filter: blur(15px);
+            border: 1px solid var(--border); padding: 12px 20px; border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6); font-size: 0.9rem;
+            display: flex; align-items: center; gap: 10px; animation: slideUp 0.3s ease;
+        }
+        .toast.success i { color: var(--success); } .toast.error i { color: var(--danger); }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* --- LAYOUT --- */
         .sidebar {
             width: 80px; background: var(--surface); border-right: 1px solid var(--border);
-            display: flex; flex-direction: column; align-items: center; padding: 20px 0; z-index: 50;
+            display: flex; flex-direction: column; align-items: center; padding: 25px 0; z-index: 50;
         }
         
-        /* Mobile Bottom Nav */
         .mobile-nav {
-            display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: var(--nav-height);
-            background: rgba(10, 10, 15, 0.95); backdrop-filter: blur(20px);
+            display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: 75px;
+            background: rgba(14, 14, 20, 0.98); backdrop-filter: blur(20px);
             border-top: 1px solid var(--border); z-index: 100;
             justify-content: space-around; align-items: center;
         }
 
         .nav-btn {
-            width: 50px; height: 50px; border-radius: 16px; border: none; background: transparent;
+            width: 50px; height: 50px; border-radius: 14px; border: none; background: transparent;
             color: var(--muted); font-size: 1.5rem; cursor: pointer; transition: 0.3s;
-            display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 15px;
+            display: flex; align-items: center; justify-content: center; margin-bottom: 12px; position: relative;
         }
         .nav-btn:hover { color: white; background: rgba(255,255,255,0.05); }
-        .nav-btn.active { color: var(--neon-b); background: rgba(59, 130, 246, 0.1); box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); }
+        .nav-btn.active { color: var(--neon-b); background: rgba(96, 165, 250, 0.15); box-shadow: 0 0 20px rgba(96, 165, 250, 0.1); }
+        .nav-btn.pulse { animation: pulse 2s infinite; color: var(--neon-p); }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         
-        /* Login/Auth Button Styles */
-        .auth-btn-glow {
-            color: var(--neon-alert);
-            animation: pulse-red 2s infinite;
-        }
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(244, 63, 94, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
-        }
-
-        /* --- MAIN VIEWS --- */
-        .view { flex: 1; display: none; flex-direction: column; height: 100%; overflow: hidden; animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .app-container { flex: 1; display: flex; position: relative; height: 100%; width: 100%; }
+        .view { flex: 1; display: none; flex-direction: column; height: 100%; overflow: hidden; }
         .view.active { display: flex; }
-        
-        /* Header */
+
+        /* --- GALLERY --- */
         .header {
             height: 70px; padding: 0 25px; border-bottom: 1px solid var(--border);
             display: flex; justify-content: space-between; align-items: center;
-            background: rgba(3, 3, 5, 0.8); backdrop-filter: blur(10px); z-index: 10;
+            background: rgba(5, 5, 7, 0.9); backdrop-filter: blur(10px); z-index: 20;
         }
-        .page-title { font-weight: 800; font-size: 1.5rem; letter-spacing: -1px; background: linear-gradient(to right, white, var(--muted)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-        /* --- VIEW 1: MESSAGING --- */
+        .gallery-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
+            gap: 15px; padding: 20px; overflow-y: auto;
+        }
+        
+        .gallery-3d {
+            display: none; perspective: 1200px; overflow: hidden;
+            height: 100%; align-items: center; justify-content: center; position: relative;
+        }
+        .gallery-3d.active { display: flex; }
+        
+        .carousel {
+            position: relative; width: 100%; height: 100%; transform-style: preserve-3d;
+            display: flex; align-items: center; justify-content: center; transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .card-3d {
+            position: absolute; width: 280px; height: 400px; background: var(--surface);
+            border: 1px solid var(--border); border-radius: 20px; overflow: hidden;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.7); -webkit-box-reflect: below 10px linear-gradient(transparent, rgba(0,0,0,0.4));
+        }
+        .card-3d img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.8); }
+        
+        .art-card {
+            aspect-ratio: 3/4; border-radius: 12px; overflow: hidden; position: relative;
+            background: var(--surface); border: 1px solid var(--border); cursor: pointer;
+            transition: 0.3s;
+        }
+        .art-card:hover { transform: translateY(-5px); border-color: var(--neon-b); box-shadow: 0 10px 30px rgba(96, 165, 250, 0.15); }
+        .art-card img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* --- MESSAGING --- */
         .msg-layout { display: flex; height: 100%; }
-        .inbox-list { width: 350px; border-right: 1px solid var(--border); background: var(--surface-2); display: flex; flex-direction: column; }
+        .inbox-list { width: 340px; border-right: 1px solid var(--border); background: var(--surface-2); display: flex; flex-direction: column; }
         .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--bg); position: relative; }
         
-        .chat-tabs { display: flex; padding: 15px; gap: 10px; }
-        .chat-tab { flex: 1; padding: 10px; background: var(--surface); border: 1px solid var(--border); color: var(--muted); border-radius: 8px; cursor: pointer; font-size: 0.85rem; text-align: center; transition:0.2s; font-weight: 600; }
+        .chat-tabs { display: flex; padding: 15px; gap: 8px; }
+        .chat-tab { flex: 1; padding: 10px; background: var(--surface); color: var(--muted); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; text-align: center; font-size: 0.8rem; font-weight: 700; transition: 0.2s; }
         .chat-tab.active { background: var(--neon-b); color: white; border-color: var(--neon-b); }
 
-        .inbox-item { padding: 15px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; gap: 15px; transition: 0.2s; }
+        .inbox-item { padding: 15px 20px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; gap: 15px; transition: 0.2s; }
         .inbox-item:hover { background: rgba(255,255,255,0.03); }
-        .avatar { width: 45px; height: 45px; border-radius: 12px; background: linear-gradient(135deg, var(--surface), var(--border)); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--neon-p); font-size: 1.2rem; }
+        .avatar { width: 42px; height: 42px; border-radius: 12px; background: var(--border); display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--neon-p); font-size: 1.1rem; }
+
+        .bubble { max-width: 75%; padding: 12px 16px; border-radius: 16px; font-size: 0.95rem; margin-bottom: 12px; line-height: 1.5; position: relative; word-wrap: break-word; }
+        .bubble.mine { align-self: flex-end; background: var(--neon-b); color: white; border-bottom-right-radius: 4px; box-shadow: 0 4px 15px rgba(96, 165, 250, 0.2); }
+        .bubble.theirs { align-self: flex-start; background: var(--surface); border: 1px solid var(--border); border-bottom-left-radius: 4px; color: var(--text); }
+        .bubble.deleted { font-style: italic; opacity: 0.6; background: rgba(255,255,255,0.05) !important; color: var(--muted) !important; border: 1px dashed var(--border); box-shadow: none; }
         
-        /* Messages */
-        .msg-feed { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .bubble { max-width: 75%; padding: 12px 18px; border-radius: 18px; font-size: 0.95rem; position: relative; line-height: 1.5; }
-        .bubble.mine { align-self: flex-end; background: linear-gradient(135deg, var(--neon-b), var(--neon-p)); color: white; border-bottom-right-radius: 4px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2); }
-        .bubble.theirs { align-self: flex-start; background: var(--surface-2); border: 1px solid var(--border); border-bottom-left-radius: 4px; color: var(--text); }
-        
-        .timer-badge { font-size: 0.7rem; display: inline-flex; align-items: center; gap: 3px; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; margin-top: 5px; opacity: 0.8; }
-        .msg-img { max-width: 100%; border-radius: 10px; margin-top: 5px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: 0.2s; }
-        .msg-img:hover { opacity: 0.9; }
-
-        /* --- VIEW 2: 3D GALLERY (DEFAULT) --- */
-        .gallery-3d-container {
-            flex: 1; padding: 30px; overflow-y: auto; perspective: 1200px;
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 25px;
-            align-content: start;
+        .msg-del-btn {
+            position: absolute; top: -10px; right: -10px; z-index: 10;
+            width: 24px; height: 24px; background: var(--surface); border: 1px solid var(--danger); 
+            color: var(--danger); border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; cursor: pointer; opacity: 0; transition: 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.5);
         }
-        .art-card {
-            aspect-ratio: 3/4; border-radius: 16px; overflow: hidden; position: relative;
-            background: var(--surface); border: 1px solid var(--border); cursor: pointer;
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s;
-            transform-style: preserve-3d; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-        }
-        .art-card:hover { transform: translateZ(30px) scale(1.05) rotateX(2deg); border-color: var(--neon-b); z-index: 100; }
-        .art-card img { width: 100%; height: 100%; object-fit: cover; }
-        .art-overlay {
-            position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px;
-            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); opacity: 1;
-        }
+        .bubble:hover .msg-del-btn { opacity: 1; transform: scale(1.1); }
 
-        /* --- ADMIN SPY PANEL --- */
-        .spy-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .spy-row { border-bottom: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
-        .spy-row td { padding: 12px; }
-        .spy-btn { padding: 6px 12px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); cursor: pointer; border-radius: 6px; transition: 0.2s; }
-        .spy-btn:hover { border-color: var(--danger); color: var(--danger); }
+        .ts-tag { font-size: 0.65rem; opacity: 0.7; margin-top: 4px; display: block; text-align: right; }
+        .msg-media { max-width: 100%; border-radius: 8px; margin-top: 5px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); }
+        .file-link { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; display: flex; align-items: center; gap: 10px; margin-top: 5px; cursor: pointer; text-decoration: none; color: white; border: 1px solid var(--border); }
 
-        /* --- MODALS & UTILS --- */
+        /* --- MODALS --- */
         .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(20px);
-            z-index: 200; display: none; align-items: center; justify-content: center;
-            opacity: 0; transition: opacity 0.3s;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
+            z-index: 200; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s;
         }
         .modal-overlay.active { display: flex; opacity: 1; }
-        .modal-card { width: 90%; max-width: 420px; background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 35px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); transform: scale(0.95); transition: transform 0.3s; }
+        .modal-card { width: 95%; max-width: 480px; background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 35px; max-height: 90vh; display: flex; flex-direction: column; transform: scale(0.95); transition: transform 0.3s; position: relative; }
         .modal-overlay.active .modal-card { transform: scale(1); }
         
-        .input-group { background: var(--bg); border: 1px solid var(--border); padding: 14px; border-radius: 12px; display: flex; gap: 10px; margin-bottom: 12px; transition: 0.2s; }
+        .modal-close-x {
+            position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--muted); font-size: 1.5rem; cursor: pointer; z-index: 10;
+        }
+        .modal-close-x:hover { color: white; }
+
+        .input-group { background: var(--bg); border: 1px solid var(--border); padding: 14px; border-radius: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; transition: border-color 0.2s; }
         .input-group:focus-within { border-color: var(--neon-b); }
         .input-group input { background: transparent; border: none; color: white; flex: 1; font-size: 1rem; }
         
-        .btn-main { width: 100%; padding: 16px; background: var(--text); color: black; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 1rem; margin-top: 10px; transition: 0.2s; }
-        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,255,255,0.1); }
-        .btn-neon { background: var(--neon-b); color: white; }
-        .btn-neon:hover { box-shadow: 0 5px 20px rgba(59, 130, 246, 0.4); }
-
+        .btn-main { width: 100%; padding: 16px; background: var(--text); color: black; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: 0.2s; }
         .hidden { display: none !important; }
-
-        /* --- MOBILE RESPONSIVE --- */
+        
+        /* --- MOBILE --- */
         @media (max-width: 768px) {
             .sidebar { display: none; }
             .mobile-nav { display: flex; }
-            .app-container { height: calc(100vh - var(--nav-height)); }
-            
+            .app-container { height: calc(100vh - 75px); }
             .msg-layout { position: relative; }
-            .inbox-list { width: 100%; border-right: none; }
-            .chat-area { 
-                position: absolute; inset: 0; transform: translateX(100%); transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
-                z-index: 50; background: var(--bg);
-            }
+            .inbox-list { width: 100%; }
+            .chat-area { position: absolute; inset: 0; transform: translateX(100%); transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 50; }
             .chat-area.open { transform: translateX(0); }
+            .header button.back-btn { display: block; }
+            .inbox-del { opacity: 1; } 
             
-            #back-btn { display: block !important; }
-            
-            .gallery-3d-container { padding: 15px; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-            
-            /* Make login button on mobile prominent */
-            #mob-auth-btn { background: var(--surface-2); border: 1px solid var(--border); }
+            .gallery-grid { grid-template-columns: repeat(2, 1fr); padding: 15px; gap: 10px; }
+            .modal-card { padding: 25px; width: 90%; }
         }
-        @media (min-width: 769px) {
-            #back-btn { display: none; }
-        }
-
-        /* Animations */
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+        .back-btn { display: none; background: none; border: none; color: white; font-size: 1.5rem; margin-right: 10px; }
+        .controls-3d { position: absolute; bottom: 30px; display: flex; gap: 20px; z-index: 10; width: 100%; justify-content: center; }
+        .ctrl-btn { width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 1px solid var(--border); color: white; cursor: pointer; backdrop-filter: blur(5px); }
+        
+        /* Preview */
+        .preview-box { width: 100%; height: 200px; background: #000; display: flex; align-items: center; justify-content: center; border-radius: 12px; margin-bottom: 20px; overflow: hidden; border: 1px solid var(--border); }
+        .preview-box img, .preview-box video { max-width: 100%; max-height: 100%; }
     </style>
 </head>
 <body>
 
-    <!-- 1. PC SIDEBAR -->
+    <div id="toast-container"></div>
+
+    <!-- SIDEBAR -->
     <nav class="sidebar">
-        <div style="font-weight:900; color:white; font-size:1.5rem; margin-bottom:40px; color:var(--neon-b); cursor:default;">S</div>
-        
-        <!-- Navigation -->
-        <button id="nav-gallery" class="nav-btn active" onclick="switchView('gallery')" title="Public Gallery"><i class="ri-layout-masonry-fill"></i></button>
-        <button id="nav-msg" class="nav-btn" onclick="switchView('messaging')" title="Messages"><i class="ri-mail-fill"></i></button>
-        <button class="nav-btn" onclick="toggleModal('upload')" title="Upload"><i class="ri-add-circle-fill"></i></button>
-        
+        <div style="font-weight:900; color:var(--neon-b); font-size:1.5rem; margin-bottom:40px; cursor:default;">S9</div>
+        <button id="nav-gallery" class="nav-btn active" onclick="switchView('gallery')" title="Gallery"><i class="ri-gallery-view-2"></i></button>
+        <button id="nav-msg" class="nav-btn" onclick="switchView('messaging')" title="Comms"><i class="ri-chat-4-fill"></i></button>
+        <button class="nav-btn" onclick="openUpload()" title="Upload"><i class="ri-upload-cloud-2-fill"></i></button>
         <div style="flex:1"></div>
-        
-        <!-- ADMIN (Hidden by default) -->
-        <button id="desk-admin-btn" class="nav-btn hidden" onclick="toggleModal('admin')" style="color:var(--danger)" title="God Mode"><i class="ri-eye-2-fill"></i></button>
-        
-        <!-- AUTH/PROFILE (High Visibility) -->
-        <button id="desk-auth-btn" class="nav-btn auth-btn-glow" onclick="toggleModal('auth')" title="Connect"><i class="ri-user-3-fill"></i></button>
+        <button id="admin-btn" class="nav-btn hidden" style="color:var(--danger)" onclick="toggleModal('admin')" title="God Mode"><i class="ri-eye-2-fill"></i></button>
+        <button id="auth-btn" class="nav-btn pulse" onclick="toggleModal('auth')" title="Connect"><i class="ri-user-3-fill"></i></button>
     </nav>
 
-    <!-- 2. MOBILE BOTTOM NAV -->
+    <!-- MOBILE NAV -->
     <nav class="mobile-nav">
-        <button id="mob-nav-gallery" class="nav-btn active" onclick="switchView('gallery')"><i class="ri-layout-masonry-fill"></i></button>
-        <button id="mob-nav-msg" class="nav-btn" onclick="switchView('messaging')"><i class="ri-mail-fill"></i></button>
-        <button class="nav-btn" onclick="toggleModal('upload')" style="color:white; background:var(--neon-b); border-radius:50%; margin-bottom:30px; width:60px; height:60px; box-shadow:0 0 20px rgba(59, 130, 246, 0.4); border:2px solid var(--bg);"><i class="ri-add-line"></i></button>
-        
-        <!-- ADMIN (Hidden) -->
-        <button id="mob-admin-btn" class="nav-btn hidden" onclick="toggleModal('admin')" style="color:var(--danger)"><i class="ri-eye-2-fill"></i></button>
-        
-        <!-- AUTH -->
-        <button id="mob-auth-btn" class="nav-btn auth-btn-glow" onclick="toggleModal('auth')"><i class="ri-user-3-fill"></i></button>
+        <button class="nav-btn active" onclick="switchView('gallery')"><i class="ri-gallery-view-2"></i></button>
+        <button class="nav-btn" onclick="switchView('messaging')"><i class="ri-chat-4-fill"></i></button>
+        <button class="nav-btn" onclick="openUpload()" style="background:var(--neon-b); color:white; border-radius:50%; margin-bottom:35px; box-shadow:0 0 25px rgba(96, 165, 250, 0.4);"><i class="ri-add-line"></i></button>
+        <button id="mob-admin-btn" class="nav-btn hidden" style="color:var(--danger)" onclick="toggleModal('admin')"><i class="ri-eye-2-fill"></i></button>
+        <button id="mob-auth-btn" class="nav-btn pulse" onclick="toggleModal('auth')"><i class="ri-user-3-fill"></i></button>
     </nav>
 
     <div class="app-container">
-        
-        <!-- === VIEW 1: PUBLIC GALLERY (DEFAULT LANDING) === -->
+        <!-- VIEW: GALLERY -->
         <section id="view-gallery" class="view active">
             <div class="header">
-                <div class="page-title">Serdit Grid</div>
+                <div style="font-weight:700; font-size:1.2rem; letter-spacing:1px;">PUBLIC GRID</div>
                 <div style="display:flex; gap:10px;">
-                    <select id="gallery-filter" onchange="renderGallery()" style="background:var(--surface-2); color:white; border:1px solid var(--border); padding:8px 12px; border-radius:8px; outline:none; cursor:pointer;">
-                        <option value="all">Global Feed</option>
-                        <option value="trending">Top Rated</option>
-                    </select>
+                    <button onclick="toggle3D()" class="nav-btn active" style="width:40px; height:40px; margin:0;" title="Toggle 3D/Grid"><i class="ri-box-3-line"></i></button>
                 </div>
             </div>
-            <div id="gallery-grid" class="gallery-3d-container">
-                <div style="grid-column:1/-1; text-align:center; padding-top:50px; color:var(--muted);">
-                    <i class="ri-loader-4-line ri-spin" style="font-size:2rem; margin-bottom:10px;"></i><br>Connecting to Void...
+            <div id="gallery-grid" class="gallery-grid"></div>
+            <div id="gallery-3d" class="gallery-3d">
+                <div class="carousel" id="carousel-track"></div>
+                <div class="controls-3d">
+                    <button class="ctrl-btn" onclick="rotate3D(-1)"><i class="ri-arrow-left-s-line"></i></button>
+                    <button class="ctrl-btn" onclick="rotate3D(1)"><i class="ri-arrow-right-s-line"></i></button>
                 </div>
             </div>
         </section>
 
-        <!-- === VIEW 2: MESSAGING === -->
+        <!-- VIEW: MESSAGING -->
         <section id="view-messaging" class="view">
             <div class="msg-layout">
-                <!-- Inbox List -->
                 <div class="inbox-list">
                     <div style="padding:25px; border-bottom:1px solid var(--border);">
-                        <h2 style="font-weight:800; margin-bottom:15px; font-size:1.4rem;">Inbox</h2>
+                        <h2 style="margin-bottom:15px; letter-spacing:1px;">INBOX</h2>
                         <div class="chat-tabs">
-                            <div class="chat-tab active" onclick="filterChats('dm')">Private</div>
-                            <div class="chat-tab" onclick="filterChats('group')">Channels</div>
+                            <div class="chat-tab active" onclick="setChatType('global')">Global</div>
+                            <div class="chat-tab" onclick="setChatType('group')">Groups</div>
+                            <div class="chat-tab" onclick="setChatType('dm')">Direct</div>
                         </div>
-                        <button onclick="toggleModal('new-chat')" style="width:100%; padding:12px; margin-top:15px; background:rgba(255,255,255,0.03); border:1px dashed var(--border); color:var(--neon-b); border-radius:10px; cursor:pointer; font-weight:600; transition:0.2s;">+ New Transmission</button>
+                        <button id="new-chat-btn" onclick="openNewChat()" style="width:100%; padding:12px; margin-top:15px; background:rgba(255,255,255,0.03); border:1px dashed var(--border); color:var(--neon-b); border-radius:10px; cursor:pointer; font-weight:600;">+ New Transmission</button>
                     </div>
-                    <div id="inbox-container" style="flex:1; overflow-y:auto;">
-                        <!-- Injected JS -->
-                    </div>
+                    <div id="inbox-container" style="flex:1; overflow-y:auto;"></div>
                 </div>
 
-                <!-- Active Chat Area -->
                 <div id="chat-stage" class="chat-area">
                     <div class="header">
-                        <button id="back-btn" onclick="closeChatMobile()" style="background:none; border:none; color:white; font-size:1.5rem; margin-right:15px;"><i class="ri-arrow-left-line"></i></button>
-                        <div style="flex:1;">
-                            <h3 id="chat-header-name" style="font-size:1.1rem;">Select a frequency</h3>
-                            <div id="chat-header-status" style="font-size:0.75rem; color:var(--neon-b); opacity:0.7;">End-to-End Encrypted</div>
-                        </div>
-                        <button style="background:none; border:none; color:var(--muted); font-size:1.2rem;"><i class="ri-shield-check-fill"></i></button>
+                        <button class="back-btn" onclick="closeChatMobile()"><i class="ri-arrow-left-line"></i></button>
+                        <h3 id="chat-title">Select Frequency</h3>
+                        <button id="btn-del-group" onclick="deleteGroup()" class="hidden" style="background:none; border:none; color:var(--danger); font-size:1.2rem;" title="Delete Group"><i class="ri-delete-bin-5-line"></i></button>
                     </div>
                     
-                    <div id="msg-feed" class="msg-feed"></div>
+                    <div id="msg-feed" style="flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column;"></div>
                     
-                    <form onsubmit="sendMessage(event)" style="padding:15px; border-top:1px solid var(--border); background:var(--surface);">
-                        <div style="display:flex; gap:10px; align-items:center;">
-                            <!-- Ephemeral Timer -->
-                            <select id="timer-select" style="background:var(--bg); color:var(--danger); border:1px solid var(--border); padding:8px; border-radius:8px; font-size:0.8rem; cursor:pointer;">
-                                <option value="0">Keep</option>
+                    <!-- INPUT AREA -->
+                    <div id="msg-input-area" style="padding:15px; border-top:1px solid var(--border); background:var(--surface);">
+                        <form onsubmit="sendMessage(event)" style="display:flex; gap:10px; align-items:center;">
+                            <!-- File Input now accepts specific types -->
+                            <input type="file" id="chat-file" style="display:none;" onchange="handleFileSelect()" accept="image/*,video/*,audio/*,application/pdf">
+                            <button type="button" onclick="document.getElementById('chat-file').click()" style="background:none; border:none; color:var(--muted); font-size:1.4rem;"><i class="ri-attachment-2"></i></button>
+                            
+                            <select id="msg-timer" style="background:var(--bg); color:var(--danger); border:1px solid var(--border); border-radius:8px; padding:5px; font-size:0.8rem; cursor:pointer;">
+                                <option value="0">∞</option>
                                 <option value="86400000">24h</option>
                                 <option value="172800000">48h</option>
                             </select>
                             
-                            <button type="button" onclick="document.getElementById('chat-file').click()" style="background:none; border:none; color:var(--neon-b); font-size:1.4rem; padding:0 5px; cursor:pointer;"><i class="ri-image-add-line"></i></button>
-                            <input type="file" id="chat-file" style="display:none;" onchange="sendChatImage()">
-                            
-                            <input id="msg-input" placeholder="Message..." style="flex:1; background:var(--bg); border:1px solid var(--border); padding:12px 15px; color:white; border-radius:12px;">
+                            <input id="msg-input" placeholder="Transmit..." style="flex:1; background:var(--bg); border:1px solid var(--border); padding:12px 15px; border-radius:12px; color:white;">
                             <button class="nav-btn active" style="width:45px; height:45px; border-radius:12px; margin-bottom:0;"><i class="ri-send-plane-fill"></i></button>
-                        </div>
-                    </form>
+                        </form>
+                        <div id="file-preview" style="font-size:0.75rem; color:var(--neon-b); margin-top:5px; padding-left:10px;"></div>
+                    </div>
+                    
+                    <!-- GUEST LOCK -->
+                    <div id="guest-input-lock" class="hidden" style="padding:30px; text-align:center; border-top:1px solid var(--border); background:var(--surface);">
+                        <button class="btn-main" onclick="toggleModal('auth')" style="background:var(--neon-p); color:white; width:auto; padding:12px 40px; margin:0;">Login to Transmit</button>
+                    </div>
                 </div>
             </div>
         </section>
-
     </div>
 
-    <!-- === MODALS === -->
-       <!-- AUTH MODAL -->
-    <div id="modal-auth" class="modal-overlay">
+    <!-- MODALS -->
+    <!-- AUTH -->
+    <div id="modal-auth" class="modal-overlay" onclick="if(event.target===this) toggleModal('auth')">
         <div class="modal-card">
-            <h1 style="text-align:center; margin-bottom:30px; font-weight:900; letter-spacing:3px; color:white;">SERDIT</h1>
-            
-            <!-- Logged Out View -->
+            <button class="modal-close-x" onclick="toggleModal('auth')"><i class="ri-close-line"></i></button>
+            <h2 style="text-align:center; margin-bottom:30px; font-weight:900; letter-spacing:2px;">IDENTITY</h2>
             <div id="auth-forms">
                 <div class="input-group"><i class="ri-mail-line" style="color:var(--muted)"></i><input id="email" placeholder="Email"></div>
-                <div class="input-group"><i class="ri-lock-line" style="color:var(--muted)"></i><input id="pass" type="password" placeholder="Password"></div>
-                <button class="btn-main btn-neon" onclick="login()">Connect</button>
+                <div class="input-group"><i class="ri-key-2-line" style="color:var(--muted)"></i><input id="pass" type="password" placeholder="Password"></div>
+                <button class="btn-main" style="background:var(--neon-b); color:white;" onclick="login()">Connect</button>
                 <div style="display:flex; gap:10px; margin-top:15px;">
-                    <input id="new-user" placeholder="Choose Callsign" style="background:var(--bg); border:1px solid var(--border); padding:12px; flex:1; color:white; border-radius:10px;">
-                    <button class="btn-main" onclick="register()" style="flex:1; margin-top:0; background:var(--surface-2); border:1px solid var(--border); color:var(--text);">Register</button>
+                    <input id="new-user" placeholder="Callsign" style="background:var(--bg); border:1px solid var(--border); padding:12px; flex:1; color:white; border-radius:10px;">
+                    <button class="btn-main" style="margin-top:0; flex:1; background:var(--surface-2); border:1px solid var(--border); color:var(--text);" onclick="register()">Register</button>
                 </div>
             </div>
-
-            <!-- Logged In View -->
             <div id="profile-view" class="hidden" style="text-align:center;">
-                <div style="width:80px; height:80px; background:var(--surface-2); border:1px solid var(--neon-b); border-radius:50%; margin:0 auto 20px; display:flex; align-items:center; justify-content:center; font-size:2rem; font-weight:bold; color:var(--neon-b);" id="prof-initial">U</div>
-                <h2 id="prof-name" style="margin-bottom:5px;">User</h2>
-                <p id="prof-role" style="color:var(--muted); margin-bottom:20px; font-size:0.9rem;">CITIZEN</p>
-                <button class="btn-main" onclick="logout()" style="background:var(--danger); color:white;">Disconnect</button>
+                <div style="width:80px; height:80px; background:var(--surface-2); border-radius:50%; margin:0 auto 20px; display:flex; align-items:center; justify-content:center; color:var(--neon-p); font-size:2rem; font-weight:bold;" id="prof-initial">U</div>
+                <h3 id="prof-name">User</h3>
+                <p id="prof-stats" style="color:var(--muted); font-size:0.9rem; margin-bottom:30px; font-family:'JetBrains Mono';"></p>
+                <button class="btn-main" style="background:var(--danger); color:white;" onclick="logout()">Disconnect</button>
             </div>
         </div>
     </div>
 
-    <!-- NEW CHAT MODAL -->
-    <div id="modal-new-chat" class="modal-overlay">
+    <!-- UPLOAD -->
+    <div id="modal-upload" class="modal-overlay" onclick="if(event.target===this) toggleModal('upload')">
         <div class="modal-card">
-            <h3 style="margin-bottom:20px;">New Transmission</h3>
-            <div class="input-group">
-                <input id="search-email" placeholder="Recipient Email (Exact)">
-                <button onclick="startDM()" style="background:var(--neon-b); border:none; color:white; padding:0 15px; border-radius:8px; font-weight:bold; cursor:pointer;">DM</button>
-            </div>
+            <button class="modal-close-x" onclick="toggleModal('upload')"><i class="ri-close-line"></i></button>
+            <h3>Upload to Grid</h3>
             
-            <div style="width:100%; height:1px; background:var(--border); margin:25px 0;"></div>
-            
-            <h3 style="margin-bottom:20px;">Create Channel</h3>
-            <div class="input-group">
-                <input id="new-group-name" placeholder="Channel Name">
+            <div style="border:2px dashed var(--border); padding:20px; text-align:center; margin:20px 0; border-radius:12px; cursor:pointer; background:var(--surface-2);" onclick="document.getElementById('gal-file').click()">
+                <div id="upload-preview-area">
+                    <i class="ri-upload-cloud-2-line" style="font-size:2rem; color:var(--neon-p);"></i>
+                    <p style="margin-top:10px; color:var(--muted); font-size:0.9rem;">Select Image/Video</p>
+                </div>
             </div>
-            <button class="btn-main" onclick="createGroup()">Initialize Channel</button>
-            <button onclick="toggleModal('new-chat')" style="width:100%; padding:15px; background:none; border:none; color:var(--muted); margin-top:10px; cursor:pointer;">Cancel</button>
+            <!-- Improved Input with Accept Attribute -->
+            <input type="file" id="gal-file" style="display:none;" accept="image/*,video/*" onchange="previewUpload()">
+            
+            <div class="input-group"><input id="gal-title" placeholder="Artifact Title"></div>
+            <button class="btn-main" style="background:var(--neon-p); color:white;" onclick="uploadGallery()">Publish</button>
         </div>
     </div>
 
-    <!-- UPLOAD MODAL -->
-    <div id="modal-upload" class="modal-overlay">
+    <!-- NEW CHAT -->
+    <div id="modal-new-chat" class="modal-overlay" onclick="if(event.target===this) toggleModal('new-chat')">
         <div class="modal-card">
-            <h3>Upload Artifact</h3>
-            <div style="border:2px dashed var(--border); padding:40px; text-align:center; margin:20px 0; border-radius:16px; cursor:pointer; transition:0.2s;" onclick="document.getElementById('fileIn').click()" onmouseover="this.style.borderColor='var(--neon-b)'" onmouseout="this.style.borderColor='var(--border)'">
-                <i class="ri-upload-cloud-line" style="font-size:2.5rem; color:var(--neon-b); margin-bottom:10px; display:block;"></i>
-                <p style="font-size:0.9rem; color:var(--muted);">Tap to Select File</p>
-            </div>
-            <input type="file" id="fileIn" style="display:none;">
-            <div class="input-group">
-                <input id="up-title" placeholder="Artifact Title">
-            </div>
-            <button class="btn-main btn-neon" onclick="uploadArt()">Broadcast to Grid</button>
-            <button onclick="toggleModal('upload')" style="width:100%; padding:15px; background:none; border:none; color:var(--muted); margin-top:10px; cursor:pointer;">Close</button>
+            <button class="modal-close-x" onclick="toggleModal('new-chat')"><i class="ri-close-line"></i></button>
+            <h3>Start Direct Message</h3>
+            <div class="input-group"><input id="dm-username" placeholder="Search Exact Username"> <button onclick="findUser()" style="background:var(--neon-b); border:none; color:white; padding:8px 15px; border-radius:8px; cursor:pointer;">Find</button></div>
+            <div id="user-search-res" style="margin-bottom:20px;"></div>
+            <hr style="border:0; border-top:1px solid var(--border); margin:15px 0;">
+            <h3>Create Channel</h3>
+            <div class="input-group"><input id="group-name" placeholder="Channel Name"></div>
+            <button class="btn-main" onclick="createGroup()">Initialize</button>
         </div>
     </div>
 
-    <!-- ADMIN GOD MODE -->
-    <div id="modal-admin" class="modal-overlay">
-        <div class="modal-card" style="max-width:600px; height:80vh; display:flex; flex-direction:column;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h2 style="color:var(--danger)">GOD MODE</h2>
-                <button onclick="toggleModal('admin')" style="background:none; border:none; color:white; font-size:1.5rem;"><i class="ri-close-line"></i></button>
-            </div>
-            <div style="display:flex; gap:10px; margin-bottom:15px;">
-                <button class="spy-btn" onclick="renderAdminSpy('users')">Users</button>
-                <button class="spy-btn" onclick="renderAdminSpy('dms')">Spy DMs</button>
-                <button class="spy-btn" onclick="renderAdminSpy('groups')">Spy Groups</button>
+    <!-- ADMIN -->
+    <div id="modal-admin" class="modal-overlay" onclick="if(event.target===this) toggleModal('admin')">
+        <div class="modal-card" style="max-width:800px; height:85vh;">
+            <button class="modal-close-x" onclick="toggleModal('admin')"><i class="ri-close-line"></i></button>
+            <h2 style="color:var(--danger)">GOD MODE</h2>
+            <div style="display:flex; gap:10px; margin-bottom:15px; margin-top:20px;">
+                <button onclick="renderAdmin('users')" class="nav-btn" style="width:auto; padding:0 20px; font-size:0.9rem; margin:0;">Users</button>
+                <button onclick="renderAdmin('dms')" class="nav-btn" style="width:auto; padding:0 20px; font-size:0.9rem; margin:0;">Spy DMs</button>
+                <button onclick="renderAdmin('groups')" class="nav-btn" style="width:auto; padding:0 20px; font-size:0.9rem; margin:0;">Spy Groups</button>
             </div>
             <div id="admin-content" style="flex:1; overflow-y:auto; background:var(--bg); padding:15px; border-radius:12px; border:1px solid var(--border);"></div>
         </div>
@@ -377,29 +358,15 @@
 
     <!-- LIGHTBOX -->
     <div id="modal-lightbox" class="modal-overlay" onclick="if(event.target===this) toggleModal('lightbox')">
-        <div class="modal-card" style="max-width:800px; padding:0; overflow:hidden; background:black; border:none;">
-            <div style="position:relative;">
-                <img id="lb-img" style="width:100%; max-height:60vh; object-fit:contain; background:radial-gradient(circle, #222, #000);">
-                <button onclick="toggleModal('lightbox')" style="position:absolute; top:15px; right:15px; background:rgba(0,0,0,0.5); border:none; color:white; width:40px; height:40px; border-radius:50%; cursor:pointer;"><i class="ri-close-line" style="font-size:1.5rem;"></i></button>
-            </div>
-            <div style="padding:25px; background:var(--surface);">
-                <div style="display:flex; justify-content:space-between; align-items:start;">
-                    <div>
-                        <h2 id="lb-title" style="margin-bottom:5px;">Title</h2>
-                        <p id="lb-author" style="color:var(--neon-b); font-size:0.9rem;">Author</p>
-                    </div>
-                    <button onclick="voteImg()" style="background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--text); padding:8px 15px; border-radius:20px; display:flex; gap:8px; align-items:center; cursor:pointer; transition:0.2s;">
-                        <i class="ri-heart-3-fill" style="color:var(--danger);"></i> <span id="lb-votes">0</span>
-                    </button>
-                </div>
-                <hr style="border:0; border-top:1px solid var(--border); margin:20px 0;">
-                <button onclick="viewUserGallery()" style="width:100%; padding:12px; background:var(--surface-2); color:var(--text); border:1px solid var(--border); border-radius:10px; cursor:pointer;">Filter: View All by User</button>
-            </div>
+        <div style="position:relative;">
+            <img id="lb-img" style="max-width:95vw; max-height:85vh; object-fit:contain; box-shadow:0 0 100px rgba(0,0,0,0.8); border-radius:4px;">
+            <button id="lb-del-btn" onclick="deleteActiveImage()" style="position:absolute; top:-50px; right:0; background:var(--danger); color:white; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,0.5);"><i class="ri-delete-bin-line"></i></button>
         </div>
     </div>
 
     <script>
-        const firebaseConfig = {
+        // CONFIG
+                 const firebaseConfig = {
     apiKey: "AIzaSyAtqCvW8QW76WMsweQlHEMbfxJRNWSsUak",
     authDomain: "serdit-1e0aa.firebaseapp.com",
     databaseURL: "https://serdit-1e0aa-default-rtdb.firebaseio.com",
@@ -412,372 +379,450 @@
         const CLOUD_NAME = "drnmtmsnn"; 
         const PRESET = "se_reddit";
         const ADMIN_EMAIL = "falullah@admin.com"; 
-       
-        // --- INIT ---
+
+
+        // INIT
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.database();
         
         let state = {
-            user: null, profile: null, activeChat: null, chatType: 'dm',
-            images: [], filterUser: null
+            user: null, profile: null, chatType: 'global', activeChat: 'global_messages',
+            images: [], galleryMode: 'grid', carouselIndex: 0, uploadFile: null,
+            activeImage: null
         };
 
         // --- AUTH & LOAD ---
         auth.onAuthStateChanged(async u => {
             state.user = u;
-            const authBtns = document.querySelectorAll('.auth-btn-glow');
-            const adminBtns = document.querySelectorAll('#desk-admin-btn, #mob-admin-btn');
-
             if(u) {
-                // Logged In
+                // LOGGED IN
                 const snap = await db.ref(`users/${u.uid}`).once('value');
-                state.profile = snap.val() || { role: 'pending', username: 'Anon' };
+                state.profile = snap.val() || { role: 'pending', username: 'User', storageUsed: 0, storageLimit: 50 };
                 
-                // Force Admin
                 if(u.email === ADMIN_EMAIL && state.profile.role !== 'admin') {
-                    await db.ref(`users/${u.uid}/role`).set('admin');
+                    await db.ref(`users/${u.uid}`).update({ role: 'admin', storageLimit: 999999 });
                     state.profile.role = 'admin';
                 }
 
-                // Show Admin Button ONLY if admin
                 if(state.profile.role === 'admin') {
-                    adminBtns.forEach(btn => btn.classList.remove('hidden'));
+                    document.getElementById('admin-btn').classList.remove('hidden');
+                    document.getElementById('mob-admin-btn').classList.remove('hidden');
                 }
 
-                // Update Auth Button State (Remove Glow, Change Icon?)
-                authBtns.forEach(btn => {
-                    btn.classList.remove('auth-btn-glow');
-                    btn.style.color = "var(--neon-b)";
-                });
-
-                // Prepare Profile Modal
                 document.getElementById('auth-forms').classList.add('hidden');
                 document.getElementById('profile-view').classList.remove('hidden');
                 document.getElementById('prof-name').innerText = state.profile.username;
-                document.getElementById('prof-role').innerText = state.profile.role.toUpperCase();
                 document.getElementById('prof-initial').innerText = state.profile.username[0].toUpperCase();
+                document.getElementById('prof-stats').innerText = `${(state.profile.storageUsed||0).toFixed(2)}MB / ${state.profile.storageLimit}MB Used`;
+                
+                document.getElementById('auth-btn').classList.remove('pulse');
+                document.getElementById('mob-auth-btn').classList.remove('pulse');
 
                 loadInbox();
-                toggleModal('auth'); // Close modal if open on load
+                toast(`Connected: ${state.profile.username}`, "success");
             } else {
-                // Logged Out
-                state.profile = null;
-                adminBtns.forEach(btn => btn.classList.add('hidden')); // HIDE ADMIN
-                
-                // Add Glow to Auth Buttons
-                authBtns.forEach(btn => {
-                    btn.classList.add('auth-btn-glow');
-                    btn.style.color = "var(--neon-alert)";
-                });
-
+                // GUEST MODE
                 document.getElementById('auth-forms').classList.remove('hidden');
                 document.getElementById('profile-view').classList.add('hidden');
+                document.getElementById('admin-btn').classList.add('hidden');
+                document.getElementById('mob-admin-btn').classList.add('hidden');
+                document.getElementById('auth-btn').classList.add('pulse');
+                document.getElementById('mob-auth-btn').classList.add('pulse');
+                
+                loadInbox(); 
+                toast("Guest Mode: Read Only", "info");
             }
-            // Always load public gallery
             loadGallery();
         });
+
+        // --- TOASTS ---
+        function toast(msg, type='info') {
+            const c = document.getElementById('toast-container');
+            const d = document.createElement('div');
+            d.className = `toast ${type}`;
+            const icon = type === 'success' ? 'ri-checkbox-circle-fill' : (type === 'error' ? 'ri-error-warning-fill' : 'ri-information-fill');
+            d.innerHTML = `<i class="${icon}"></i> ${msg}`;
+            c.appendChild(d);
+            setTimeout(() => d.remove(), 3000);
+        }
 
         // --- NAVIGATION ---
         function switchView(id) {
             document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
             document.getElementById(`view-${id}`).classList.add('active');
             document.querySelectorAll('.nav-btn').forEach(e => e.classList.remove('active'));
-            
-            // Activate PC and Mobile buttons
-            if(id === 'gallery') {
-                document.getElementById('nav-gallery').classList.add('active');
-                document.getElementById('mob-nav-gallery').classList.add('active');
-                loadGallery();
-            } else if (id === 'messaging') {
-                document.getElementById('nav-msg').classList.add('active');
-                document.getElementById('mob-nav-msg').classList.add('active');
-            }
+            if(id === 'messaging') loadInbox();
         }
-
         function toggleModal(id) {
             const el = document.getElementById(`modal-${id}`);
             el.classList.contains('active') ? el.classList.remove('active') : el.classList.add('active');
         }
+        function openUpload() {
+            if(!state.user) return toggleModal('auth');
+            toggleModal('upload');
+        }
+        function openNewChat() {
+            if(!state.user) return toggleModal('auth');
+            toggleModal('new-chat');
+        }
 
-        // --- MESSAGING SYSTEM ---
-        function filterChats(type) {
-            state.chatType = type;
+        // --- GALLERY ---
+        function loadGallery() {
+            db.ref('images').on('value', snap => {
+                const data = snap.val();
+                state.images = data ? Object.entries(data).map(([k,v]) => ({id:k, ...v})).reverse() : [];
+                renderGallery();
+            });
+        }
+        function toggle3D() { state.galleryMode = state.galleryMode === 'grid' ? '3d' : 'grid'; renderGallery(); }
+
+        function renderGallery() {
+            const grid = document.getElementById('gallery-grid');
+            const view3d = document.getElementById('gallery-3d');
+            const carousel = document.getElementById('carousel-track');
+
+            if(state.galleryMode === 'grid') {
+                grid.style.display = 'grid'; view3d.classList.remove('active');
+                grid.innerHTML = state.images.map(img => `
+                    <div class="art-card" onclick="openLight('${img.id}', '${img.url}', '${img.uid}')">
+                        <img src="${img.url}" loading="lazy">
+                        <div style="position:absolute; bottom:0; background:linear-gradient(to top, rgba(0,0,0,0.9), transparent); width:100%; padding:15px; font-size:0.8rem;">
+                            <b style="font-size:0.9rem;">${img.title}</b><br><span style="color:var(--neon-b)">${img.author}</span>
+                        </div>
+                    </div>`).join('');
+            } else {
+                grid.style.display = 'none'; view3d.classList.add('active');
+                carousel.innerHTML = state.images.map((img, i) => `
+                    <div class="card-3d" style="transform: rotateY(${i * 45}deg) translateZ(400px);">
+                         <img src="${img.url}">
+                    </div>
+                `).join('');
+                update3D();
+            }
+        }
+        
+        function rotate3D(dir) { state.carouselIndex += dir; update3D(); }
+        function update3D() { document.getElementById('carousel-track').style.transform = `rotateY(${state.carouselIndex * -45}deg)`; }
+        
+        function openLight(id, url, uid) { 
+            state.activeImage = {id, uid};
+            document.getElementById('lb-img').src=url; 
+            const delBtn = document.getElementById('lb-del-btn');
+            // Allow delete if Owner OR Admin
+            if(state.user && (uid === state.user.uid || state.profile.role === 'admin')) delBtn.classList.remove('hidden');
+            else delBtn.classList.add('hidden');
+            toggleModal('lightbox'); 
+        }
+
+        function deleteActiveImage() {
+            if(!confirm("Destroy Artifact?")) return;
+            db.ref(`images/${state.activeImage.id}`).remove();
+            toggleModal('lightbox');
+            toast("Artifact Destroyed", "error");
+        }
+
+        function previewUpload() {
+            const file = document.getElementById('gal-file').files[0];
+            const area = document.getElementById('upload-preview-area');
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    area.innerHTML = `<img src="${e.target.result}" style="max-height:200px; max-width:100%; border-radius:8px;">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function uploadGallery() {
+            // USER APPROVAL CHECK
+            if(state.profile.role !== 'approved' && state.profile.role !== 'admin') return toast("Account Pending Approval", "error");
+
+            const file = document.getElementById('gal-file').files[0];
+            const title = document.getElementById('gal-title').value;
+            if(!file || !checkLimit(file.size)) return;
+            toast("Uploading...", "info");
+            const url = await uploadToCloud(file);
+            if(url) {
+                await db.ref('images').push({ url, title, author: state.profile.username, ts: Date.now(), uid: state.user.uid });
+                addUsage(file.size);
+                toggleModal('upload');
+                toast("Published to Grid", "success");
+            }
+        }
+
+        // --- MESSAGING ---
+        function setChatType(t) {
+            state.chatType = t;
             document.querySelectorAll('.chat-tab').forEach(e => e.classList.remove('active'));
             event.target.classList.add('active');
             loadInbox();
         }
 
         function loadInbox() {
-            if(!state.user) return;
-            const container = document.getElementById('inbox-container');
-            container.innerHTML = ''; // Don't clear immediately to prevent flash? Nah, simplicity.
+            const list = document.getElementById('inbox-container');
+            list.innerHTML = '';
+            
+            // GLOBAL IS ALWAYS VISIBLE
+            if(state.chatType === 'global') {
+                list.innerHTML = `<div class="inbox-item" onclick="openChat('global_messages', 'Global Chat')"><div class="avatar">G</div> <div style="font-weight:bold;">Global Chat</div></div>`;
+                if(state.activeChat === 'global_messages') openChat('global_messages', 'Global Chat');
+                return;
+            }
+
+            // GUEST LOCK
+            if(!state.user) {
+                list.innerHTML = `<div style="padding:30px; text-align:center; color:var(--muted);">Login to access ${state.chatType.toUpperCase()} channels.</div>`;
+                return;
+            }
 
             const path = state.chatType === 'dm' ? `users/${state.user.uid}/dms` : `users/${state.user.uid}/chats`;
-            
             db.ref(path).on('value', async snap => {
-                container.innerHTML = '';
-                if(!snap.exists()) return container.innerHTML = '<div style="padding:20px; color:gray; text-align:center;">Empty</div>';
-                
-                const ids = Object.keys(snap.val());
-                for(const id of ids) {
-                    let name = "Unknown";
-                    if(state.chatType === 'dm') {
-                        const chatSnap = await db.ref(`dms/${id}`).once('value');
-                        if(chatSnap.exists()) {
-                            const mems = Object.keys(chatSnap.val().members);
-                            const otherId = mems.find(uid => uid !== state.user.uid) || state.user.uid;
-                            const uSnap = await db.ref(`users/${otherId}`).once('value');
-                            name = uSnap.val()?.username || "User";
+                list.innerHTML = '';
+                if(snap.exists()) {
+                    const ids = Object.keys(snap.val());
+                    for(const id of ids) {
+                        let name = "Chat";
+                        let isGroup = false;
+                        if(state.chatType === 'group') {
+                            const i = await db.ref(`groups/${id}/info`).once('value');
+                            if(!i.exists()) continue; 
+                            name = i.val()?.name;
+                            isGroup = true;
+                        } else {
+                            const d = await db.ref(`dms/${id}`).once('value');
+                            const mems = Object.keys(d.val().members);
+                            const other = mems.find(m => m !== state.user.uid) || state.user.uid;
+                            const u = await db.ref(`users/${other}`).once('value');
+                            name = u.val()?.username;
                         }
-                    } else {
-                        const gSnap = await db.ref(`groups/${id}/info`).once('value');
-                        name = gSnap.val()?.name || "Group";
+                        
+                        const el = document.createElement('div');
+                        el.className = 'inbox-item';
+                        el.innerHTML = `<div class="avatar">${name[0].toUpperCase()}</div> <div><div style="font-weight:bold;">${name}</div><div style="font-size:0.75rem; color:var(--muted);">Encrypted</div></div>`;
+                        el.onclick = () => openChat(id, name);
+                        list.appendChild(el);
                     }
-
-                    const div = document.createElement('div');
-                    div.className = 'inbox-item';
-                    div.innerHTML = `<div class="avatar">${name[0]}</div><div><strong>${name}</strong><br><small style="color:var(--muted)">Encrypted</small></div>`;
-                    div.onclick = () => openChat(id, name);
-                    container.appendChild(div);
                 }
             });
         }
 
-        function openChat(id, name) {
+        async function openChat(id, name) {
             state.activeChat = id;
-            document.getElementById('chat-header-name').innerText = name;
+            document.getElementById('chat-title').innerText = name;
             document.getElementById('msg-feed').innerHTML = '';
+            document.getElementById('chat-stage').classList.add('open');
             
-            if(window.innerWidth < 768) document.getElementById('chat-stage').classList.add('open');
-
-            const root = state.chatType === 'dm' ? 'dms' : 'groups';
-            db.ref(`${root}/${id}/messages`).limitToLast(50).on('child_added', snap => {
-                renderMessage(snap.val());
-            });
-        }
-
-        function renderMessage(msg) {
-            if(msg.expiresAt && Date.now() > msg.expiresAt) return; 
-
-            const isMine = state.user && msg.uid === state.user.uid;
-            const div = document.createElement('div');
-            div.className = `bubble ${isMine ? 'mine' : 'theirs'}`;
+            // GUEST LOCK INPUT
+            const inputArea = document.getElementById('msg-input-area');
+            const guestLock = document.getElementById('guest-input-lock');
             
-            let content = `<div style="font-size:0.7rem; font-weight:bold; margin-bottom:4px; opacity:0.8;">${msg.user}</div>`;
-            if(msg.image) content += `<img src="${msg.image}" class="msg-img" onclick="window.open(this.src)">`;
-            content += `<div>${msg.text || ''}</div>`;
-            
-            if(msg.expiresAt) {
-                const hours = Math.round((msg.expiresAt - Date.now())/3600000);
-                content += `<div class="timer-badge"><i class="ri-time-line"></i> ${hours}h</div>`;
+            if(!state.user) {
+                inputArea.classList.add('hidden');
+                guestLock.classList.remove('hidden');
+            } else {
+                inputArea.classList.remove('hidden');
+                guestLock.classList.add('hidden');
             }
 
-            div.innerHTML = content;
-            const feed = document.getElementById('msg-feed');
-            feed.appendChild(div);
-            feed.scrollTop = feed.scrollHeight;
+            // Group Delete Button
+            const delBtn = document.getElementById('btn-del-group');
+            if(state.user && state.chatType === 'group') {
+                const info = await db.ref(`groups/${id}/info`).once('value');
+                const members = info.val()?.members || {};
+                if(state.profile.role === 'admin' || Object.keys(members)[0] === state.user.uid) delBtn.classList.remove('hidden');
+                else delBtn.classList.add('hidden');
+            } else {
+                delBtn.classList.add('hidden');
+            }
+
+            const root = state.chatType === 'global' ? 'global_messages' : (state.chatType === 'dm' ? `dms/${id}/messages` : `groups/${id}/messages`);
+            db.ref(root).limitToLast(50).on('child_added', snap => renderMessage(snap, root));
+            db.ref(root).limitToLast(50).on('child_changed', snap => {
+                const el = document.getElementById(`msg-${snap.key}`);
+                if(el) el.outerHTML = getMessageHTML(snap.val(), snap.key, root, state.user && snap.val().uid === state.user.uid);
+            });
+        }
+        
+        function deleteGroup() {
+            if(!confirm("Permanently Delete Group?")) return;
+            db.ref(`groups/${state.activeChat}`).remove();
+            closeChatMobile();
+            toast("Group Deleted", "error");
         }
 
-        function closeChatMobile() { document.getElementById('chat-stage').classList.remove('open'); }
-
-        async function startDM() {
-            const email = document.getElementById('search-email').value;
-            const snap = await db.ref('users').orderByChild('email').equalTo(email).once('value');
-            if(snap.exists()) {
-                const otherUid = Object.keys(snap.val())[0];
-                const myUid = state.user.uid;
-                const chatId = [myUid, otherUid].sort().join('_');
-                
-                const updates = {};
-                updates[`dms/${chatId}/members/${myUid}`] = true;
-                updates[`dms/${chatId}/members/${otherUid}`] = true;
-                updates[`users/${myUid}/dms/${chatId}`] = true;
-                updates[`users/${otherUid}/dms/${chatId}`] = true;
-                
-                await db.ref().update(updates);
-                toggleModal('new-chat');
-                filterChats('dm');
-            } else { alert("User not found"); }
-        }
-
-        async function createGroup() {
-            const name = document.getElementById('new-group-name').value;
-            const gid = db.ref('groups').push().key;
-            const updates = {};
-            updates[`groups/${gid}/info`] = { name: name, members: { [state.user.uid]: true } };
-            updates[`users/${state.user.uid}/chats/${gid}`] = true;
-            await db.ref().update(updates);
-            toggleModal('new-chat');
-            filterChats('group');
-        }
-
-        function sendMessage(e) {
-            e.preventDefault();
-            if(!state.activeChat) return;
-            const txt = document.getElementById('msg-input').value;
-            const timer = parseInt(document.getElementById('timer-select').value);
-            if(!txt) return;
+        function renderMessage(snap, rootPath) {
+            const msg = snap.val();
+            if(msg.expiresAt && Date.now() > msg.expiresAt) return;
             
+            const isMine = state.user && msg.uid === state.user.uid;
+            
+            const div = document.createElement('div');
+            div.id = `msg-${snap.key}`;
+            div.className = `bubble ${isMine ? 'mine' : 'theirs'} ${msg.isDeleted ? 'deleted' : ''}`;
+            div.innerHTML = getMessageHTML(msg, snap.key, rootPath, isMine);
+            document.getElementById('msg-feed').appendChild(div);
+            document.getElementById('msg-feed').scrollTop = 99999;
+        }
+
+        function getMessageHTML(msg, key, rootPath, isMine) {
+            if(msg.isDeleted) return `<div><i class="ri-prohibited-line"></i> Deleted</div>`;
+
+            let content = "";
+            if(!isMine && state.chatType !== 'dm') 
+                content += `<div style="font-size:0.7rem; font-weight:bold; color:var(--neon-p); margin-bottom:2px;">${msg.user}</div>`;
+            
+            if(msg.type === 'image') content += `<img src="${msg.url}" class="msg-media" onclick="window.open(this.src)">`;
+            else if(msg.type === 'video') content += `<video src="${msg.url}" controls class="msg-media"></video>`;
+            else if(msg.type === 'audio') content += `<audio src="${msg.url}" controls style="width:100%; margin-top:5px;"></audio>`;
+            else if(msg.type === 'file') content += `<a href="${msg.url}" target="_blank" class="file-link"><i class="ri-file-line"></i> Download File</a>`;
+            
+            if(msg.text) content += `<div>${msg.text}</div>`;
+            
+            const time = new Date(msg.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            content += `<span class="ts-tag">${time}</span>`;
+
+            // Delete Button (Owner or Admin)
+            if(state.user && (msg.uid === state.user.uid || state.profile.role === 'admin')) {
+                content += `<button class="msg-del-btn" onclick="deleteMsg('${rootPath}', '${key}')"><i class="ri-delete-bin-line"></i></button>`;
+            }
+            return content;
+        }
+
+        function deleteMsg(path, key) {
+            if(!confirm("Retract this message?")) return;
+            db.ref(`${path}/${key}`).update({ text: "🚫 Deleted", isDeleted: true, type: 'deleted', url: null });
+            toast("Message Retracted");
+        }
+
+        function handleFileSelect() {
+            state.uploadFile = document.getElementById('chat-file').files[0];
+            document.getElementById('file-preview').innerText = state.uploadFile ? `Attached: ${state.uploadFile.name}` : "";
+        }
+
+        async function sendMessage(e) {
+            e.preventDefault();
+            if(!state.activeChat || !state.user) return; 
+            
+            // USER APPROVAL CHECK FOR CHAT
+            if(state.profile.role !== 'approved' && state.profile.role !== 'admin') return toast("Account Pending Approval", "error");
+
+            const txt = document.getElementById('msg-input').value;
+            const timer = parseInt(document.getElementById('msg-timer').value);
+            
+            if(!txt && !state.uploadFile) return;
+
+            let mediaData = { type: null, url: null };
+            if(state.uploadFile) {
+                if(!checkLimit(state.uploadFile.size)) return;
+                const url = await uploadToCloud(state.uploadFile);
+                if(!url) return;
+                addUsage(state.uploadFile.size);
+                const type = state.uploadFile.type.split('/')[0]; 
+                mediaData.type = ['image','video','audio'].includes(type) ? type : 'file';
+                mediaData.url = url;
+            }
+
             const payload = {
-                text: txt, uid: state.user.uid, user: state.profile.username, ts: Date.now()
+                text: txt, uid: state.user.uid, user: state.profile.username, ts: Date.now(), ...mediaData
             };
             if(timer > 0) payload.expiresAt = Date.now() + timer;
 
-            const root = state.chatType === 'dm' ? 'dms' : 'groups';
-            db.ref(`${root}/${state.activeChat}/messages`).push(payload);
+            const root = state.chatType === 'global' ? 'global_messages' : (state.chatType === 'dm' ? `dms/${state.activeChat}/messages` : `groups/${state.activeChat}/messages`);
+            await db.ref(root).push(payload);
+            
             document.getElementById('msg-input').value = '';
+            state.uploadFile = null;
+            document.getElementById('chat-file').value = '';
+            document.getElementById('file-preview').innerText = '';
         }
 
-        async function sendChatImage() {
-            const file = document.getElementById('chat-file').files[0];
-            const timer = parseInt(document.getElementById('timer-select').value);
-            if(!file || !state.activeChat) return;
-
+        // --- CORE UTILS ---
+        async function uploadToCloud(file) {
+            const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', PRESET); fd.append('resource_type', 'auto'); 
             try {
-                const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', PRESET);
-                const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {method:'POST', body:fd});
-                const data = await res.json();
-                
-                const payload = {
-                    text: "", image: data.secure_url,
-                    uid: state.user.uid, user: state.profile.username, ts: Date.now()
-                };
-                if(timer > 0) payload.expiresAt = Date.now() + timer;
-
-                const root = state.chatType === 'dm' ? 'dms' : 'groups';
-                db.ref(`${root}/${state.activeChat}/messages`).push(payload);
-            } catch(e) { alert("Upload fail"); }
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {method:'POST', body:fd});
+                const data = await res.json(); return data.secure_url;
+            } catch(e) { toast("Upload Failed", "error"); return null; }
         }
-        
-        // --- PUBLIC GALLERY ---
-        function loadGallery() {
-            db.ref('images').on('value', snap => {
-                const grid = document.getElementById('gallery-grid');
-                grid.innerHTML = '';
-                const data = snap.val();
-                if(!data) return grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:gray;">Void Empty. Broadcast Something.</div>';
-                
-                let list = Object.keys(data).map(k => ({id:k, ...data[k]}));
-                
-                if(state.filterUser) {
-                    list = list.filter(i => i.uid === state.filterUser);
-                }
 
-                if(document.getElementById('gallery-filter').value === 'trending') {
-                    list.sort((a,b) => (b.voteCount||0) - (a.voteCount||0));
-                } else {
-                    list.sort((a,b) => b.ts - a.ts);
-                }
+        function checkLimit(bytes) {
+            const mb = bytes / (1024*1024);
+            if((state.profile.storageUsed + mb) > state.profile.storageLimit) { toast("Storage Quota Exceeded!", "error"); return false; }
+            return true;
+        }
+        async function addUsage(bytes) {
+            const mb = bytes / (1024*1024);
+            await db.ref(`users/${state.user.uid}/storageUsed`).set((state.profile.storageUsed || 0) + mb);
+        }
 
-                list.forEach(img => {
-                    const el = document.createElement('div');
-                    el.className = 'art-card';
-                    el.innerHTML = `
-                        <img src="${img.url}">
-                        <div class="art-overlay">
-                            <div style="font-weight:bold; color:white;">${img.title}</div>
-                            <div style="font-size:0.8rem; color:var(--neon-b)">${img.author}</div>
-                        </div>
-                    `;
-                    el.onclick = () => openLightbox(img);
-                    grid.appendChild(el);
+        // --- SEARCH/GROUPS ---
+        async function findUser() {
+            const name = document.getElementById('dm-username').value;
+            const snap = await db.ref('users').orderByChild('username').equalTo(name).once('value');
+            if(snap.exists()) {
+                const uid = Object.keys(snap.val())[0];
+                const chatId = [state.user.uid, uid].sort().join('_');
+                const updates = {};
+                updates[`dms/${chatId}/members/${state.user.uid}`] = true; updates[`dms/${chatId}/members/${uid}`] = true;
+                updates[`users/${state.user.uid}/dms/${chatId}`] = true; updates[`users/${uid}/dms/${chatId}`] = true;
+                await db.ref().update(updates);
+                toggleModal('new-chat'); setChatType('dm');
+            } else { toast("User not found", "error"); }
+        }
+
+        async function createGroup() {
+            const name = document.getElementById('group-name').value;
+            const gid = db.ref('groups').push().key;
+            const updates = {};
+            updates[`groups/${gid}/info`] = { name, members: { [state.user.uid]: true } };
+            updates[`users/${state.user.uid}/chats/${gid}`] = true;
+            await db.ref().update(updates);
+            toggleModal('new-chat'); setChatType('group');
+        }
+
+        // --- ADMIN ---
+        function renderAdmin(mode) {
+            const container = document.getElementById('admin-content'); container.innerHTML = 'Scanning...';
+            db.ref(mode).once('value', snap => {
+                container.innerHTML = '';
+                if(!snap.exists()) return container.innerHTML = 'Empty';
+                snap.forEach(c => {
+                    const row = document.createElement('div');
+                    row.className = "admin-row";
+                    let info = `ID: ${c.key}`;
+                    if(mode === 'users') {
+                        const u = c.val();
+                        const badge = u.role === 'pending' ? `<span class="status-badge status-pending">PENDING</span>` : `<span class="status-badge status-approved">CITIZEN</span>`;
+                        info = `<div>${badge} <b style="color:var(--neon-b)">${u.username}</b><br><span style="font-size:0.75rem; color:gray">${u.email} // ${u.password}</span></div>`;
+                        
+                        let actions = `<div>`;
+                        if(u.role === 'pending') actions += `<button onclick="approveUser('${c.key}')" class="btn-main" style="width:auto; padding:5px 10px; margin:0; background:var(--success); color:white;">Approve</button> `;
+                        actions += `<button onclick="banUser('${c.key}')" style="color:red; background:none; border:none; margin-left:10px;">BAN</button></div>`;
+                        row.innerHTML = info + actions;
+                    } else {
+                         if(mode === 'groups') info = `<b>${c.val().info.name}</b>`;
+                         row.innerHTML = `<div>${info}</div> <button onclick="spyChat('${c.key}', '${mode}')" class="btn-main" style="width:auto; padding:5px;">Spy</button>`;
+                    }
+                    container.appendChild(row);
                 });
             });
         }
-        
-        function openLightbox(img) {
-            state.activeImage = img;
-            document.getElementById('lb-img').src = img.url;
-            document.getElementById('lb-title').innerText = img.title;
-            document.getElementById('lb-author').innerText = img.author;
-            document.getElementById('lb-votes').innerText = img.voteCount || 0;
-            toggleModal('lightbox');
-        }
-
-        function viewUserGallery() {
-            state.filterUser = state.activeImage.uid;
-            toggleModal('lightbox');
-            switchView('gallery');
-            alert(`Filter active: ${state.activeImage.author}`);
-        }
-
-        function voteImg() {
-             db.ref(`images/${state.activeImage.id}/voteCount`).transaction(c => (c||0)+1);
-             document.getElementById('lb-votes').innerText = (state.activeImage.voteCount||0) + 1;
-        }
-
-        // --- UPLOAD ---
-        async function uploadArt() {
-            if(!state.user) return toggleModal('auth');
-            if(state.profile.role !== 'approved' && state.profile.role !== 'admin') return alert("Pending Approval");
-            
-            const file = document.getElementById('fileIn').files[0];
-            const title = document.getElementById('up-title').value;
-            if(!file) return;
-
-            const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', PRESET);
-            const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {method:'POST', body:fd});
-            const data = await res.json();
-            
-            await db.ref('images').push({
-                url: data.secure_url, title, author: state.profile.username, uid: state.user.uid, ts: Date.now(), voteCount: 0
-            });
-            toggleModal('upload');
-            alert("Artifact Broadcasted.");
-        }
+        function spyChat(id, type) { toggleModal('admin'); state.chatType = type === 'dms' ? 'dm' : 'group'; openChat(id, "GOD MODE: " + id); }
+        window.approveUser = (uid) => { db.ref(`users/${uid}/role`).set('approved'); toast("User Approved", "success"); renderAdmin('users'); };
+        window.banUser = (uid) => { db.ref(`users/${uid}/role`).set('banned'); toast("User Banned", "error"); renderAdmin('users'); };
 
         // --- AUTH ---
-        async function login() {
-            try { await auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value); }
-            catch(e) { alert(e.message); }
+        function login() { auth.signInWithEmailAndPassword(document.getElementById('email').value, document.getElementById('pass').value).catch(e=>toast(e.message, "error")); }
+        function register() {
+            const u = document.getElementById('new-user').value; const e = document.getElementById('email').value; const p = document.getElementById('pass').value;
+            auth.createUserWithEmailAndPassword(e, p).then(c => {
+                db.ref(`users/${c.user.uid}`).set({ username: u, email: e, password: p, role: 'pending', storageLimit: 50, storageUsed: 0 });
+                toast("Request Sent. Wait for Approval.", "info");
+            }).catch(e=>toast(e.message, "error"));
         }
-        async function register() {
-            const u = document.getElementById('new-user').value;
-            const e = document.getElementById('email').value;
-            const p = document.getElementById('pass').value;
-            try {
-                const c = await auth.createUserWithEmailAndPassword(e, p);
-                const r = (e === ADMIN_EMAIL) ? 'admin' : 'pending';
-                await db.ref(`users/${c.user.uid}`).set({ username: u, email: e, password: p, role: r });
-            } catch(er) { alert(er.message); }
-        }
-        function logout() { auth.signOut(); toggleModal('auth'); }
-
-        // --- ADMIN GOD MODE ---
-        function renderAdminSpy(mode) {
-            const c = document.getElementById('admin-content');
-            c.innerHTML = 'Scanning Database...';
-            
-            db.ref(mode).once('value', snap => {
-                c.innerHTML = `<table class="spy-table">`;
-                snap.forEach(child => {
-                    const k = child.key;
-                    const v = child.val();
-                    let info = "";
-                    
-                    if(mode === 'users') info = `<div style="color:var(--neon-b)">${v.username}</div><div style="font-size:0.7rem; color:gray">${v.email} // ${v.password}</div>`;
-                    else if(mode === 'dms') info = `Chat ID: <span style="font-size:0.7rem">${k}</span>`;
-                    else if(mode === 'groups') info = `${v.info.name}`;
-
-                    const row = document.createElement('tr');
-                    row.className = 'spy-row';
-                    row.innerHTML = `<td>${info}</td><td><button class="spy-btn" onclick="spyOpen('${mode}', '${k}')">Open</button></td>`;
-                    c.appendChild(row);
-                });
-            });
-        }
-
-        function spyOpen(mode, id) {
-            if(mode === 'users') {
-                 db.ref(`users/${id}/role`).set('approved');
-                 alert("User Approved");
-            } else {
-                toggleModal('admin'); 
-                state.chatType = (mode === 'dms') ? 'dm' : 'group';
-                openChat(id, "GOD MODE VIEW");
-            }
-        }
+        function logout() { auth.signOut(); }
+        function closeChatMobile() { document.getElementById('chat-stage').classList.remove('open'); }
     </script>
 </body>
 </html>
