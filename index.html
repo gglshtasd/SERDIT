@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SERDIT | Definitive</title>
+    <title>SERDIT | Secure</title>
     
-    <!-- Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
     <!-- Firebase SDKs -->
@@ -15,19 +14,21 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
     <style>
-        /* --- THEME: DEEP VOID X --- */
+        /* --- THEME: SECURE VOID --- */
         :root {
-            --bg: #050507;
-            --surface: #0e0e14;
-            --surface-2: #181824;
-            --border: #2a2a3d;
-            --neon-p: #c084fc;
-            --neon-b: #60a5fa;
+            --bg: #020203;
+            --surface: #0a0a0f;
+            --surface-hover: #12121a;
+            --border: #1f1f2e;
+            
+            --neon-p: #a855f7;
+            --neon-b: #3b82f6;
             --danger: #ef4444;
             --success: #10b981;
-            --text: #f1f5f9;
-            --muted: #64748b;
-            --nav-height: 70px;
+            
+            --text: #f8fafc;
+            --text-muted: #64748b;
+            --nav-height: 65px;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
@@ -41,141 +42,93 @@
             display: flex;
         }
 
-        /* --- TOASTS --- */
-        #toast-container { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; width: 90%; max-width: 300px; }
+        /* --- UI COMPONENTS --- */
+        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 11000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; width: 90%; max-width: 350px; }
         .toast {
-            background: rgba(14, 14, 20, 0.95); backdrop-filter: blur(15px);
-            border: 1px solid var(--border); padding: 12px 20px; border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6); font-size: 0.9rem;
-            display: flex; align-items: center; gap: 10px; animation: slideUp 0.3s ease;
+            background: rgba(10, 10, 15, 0.95); backdrop-filter: blur(12px);
+            border: 1px solid var(--border); padding: 14px 20px; border-radius: 50px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8); font-size: 0.9rem; font-weight: 500;
+            display: flex; align-items: center; gap: 12px; animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .toast.success i { color: var(--success); } .toast.error i { color: var(--danger); }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        /* --- LAYOUT --- */
-        .sidebar {
-            width: 80px; background: var(--surface); border-right: 1px solid var(--border);
-            display: flex; flex-direction: column; align-items: center; padding: 25px 0; z-index: 50;
-        }
-        
-        .mobile-nav {
-            display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: var(--nav-height);
-            background: rgba(14, 14, 20, 0.98); backdrop-filter: blur(20px);
-            border-top: 1px solid var(--border); z-index: 100;
-            justify-content: space-around; align-items: center;
-        }
+        .sidebar { width: 80px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding: 25px 0; z-index: 50; }
+        .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: var(--nav-height); background: rgba(10, 10, 15, 0.98); backdrop-filter: blur(20px); border-top: 1px solid var(--border); z-index: 100; justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom); }
 
-        .nav-btn {
-            width: 50px; height: 50px; border-radius: 14px; border: none; background: transparent;
-            color: var(--muted); font-size: 1.5rem; cursor: pointer; transition: 0.3s;
-            display: flex; align-items: center; justify-content: center; margin-bottom: 12px; position: relative;
-        }
-        .nav-btn:hover { color: white; background: rgba(255,255,255,0.05); }
-        .nav-btn.active { color: var(--neon-b); background: rgba(96, 165, 250, 0.15); box-shadow: 0 0 20px rgba(96, 165, 250, 0.1); }
+        .nav-btn { width: 48px; height: 48px; border-radius: 14px; border: none; background: transparent; color: var(--text-muted); font-size: 1.4rem; cursor: pointer; transition: 0.2s ease; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; position: relative; }
+        .nav-btn:hover { color: white; background: var(--surface-hover); }
+        .nav-btn.active { color: var(--neon-b); background: rgba(59, 130, 246, 0.1); }
         .nav-btn.pulse { animation: pulse 2s infinite; color: var(--neon-p); }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         
         .app-container { flex: 1; display: flex; position: relative; height: 100%; width: 100%; }
-        .view { flex: 1; display: none; flex-direction: column; height: 100%; overflow: hidden; }
+        .view { flex: 1; display: none; flex-direction: column; height: 100%; overflow: hidden; animation: fadeIn 0.3s ease; }
         .view.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* --- GALLERY --- */
-        .header {
-            height: 70px; padding: 0 25px; border-bottom: 1px solid var(--border);
-            display: flex; justify-content: space-between; align-items: center;
-            background: rgba(5, 5, 7, 0.9); backdrop-filter: blur(10px); z-index: 20;
-        }
+        /* GALLERY */
+        .header { height: 70px; padding: 0 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(2, 2, 3, 0.8); backdrop-filter: blur(10px); z-index: 20; }
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; padding: 25px; overflow-y: auto; align-content: start; }
+        .art-card { aspect-ratio: 3/4; border-radius: 16px; overflow: hidden; position: relative; background: var(--surface); border: 1px solid var(--border); cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .art-card:hover { transform: translateY(-5px); border-color: var(--neon-b); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .art-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+        .art-card:hover img { transform: scale(1.05); }
+        .art-info { position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); transform: translateY(100%); transition: transform 0.3s; }
+        .art-card:hover .art-info { transform: translateY(0); }
 
-        .gallery-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
-            gap: 15px; padding: 20px; overflow-y: auto;
-        }
-        
-        .gallery-3d {
-            display: none; perspective: 1200px; overflow: hidden;
-            height: 100%; align-items: center; justify-content: center; position: relative;
-        }
+        .gallery-3d { display: none; perspective: 1500px; overflow: hidden; height: 100%; align-items: center; justify-content: center; position: relative; }
         .gallery-3d.active { display: flex; }
-        
-        .carousel {
-            position: relative; width: 100%; height: 100%; transform-style: preserve-3d;
-            display: flex; align-items: center; justify-content: center; transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-        .card-3d {
-            position: absolute; width: 280px; height: 400px; background: var(--surface);
-            border: 1px solid var(--border); border-radius: 20px; overflow: hidden;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.7); -webkit-box-reflect: below 10px linear-gradient(transparent, rgba(0,0,0,0.4));
-        }
-        .card-3d img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.8); }
-        
-        .art-card {
-            aspect-ratio: 3/4; border-radius: 12px; overflow: hidden; position: relative;
-            background: var(--surface); border: 1px solid var(--border); cursor: pointer;
-            transition: 0.3s;
-        }
-        .art-card:hover { transform: translateY(-5px); border-color: var(--neon-b); box-shadow: 0 10px 30px rgba(96, 165, 250, 0.15); }
-        .art-card img { width: 100%; height: 100%; object-fit: cover; }
+        .carousel { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.6s; display: flex; align-items: center; justify-content: center;}
+        .card-3d { position: absolute; width: 300px; height: 450px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.8); -webkit-box-reflect: below 10px linear-gradient(transparent, rgba(0,0,0,0.4)); }
+        .card-3d img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* --- MESSAGING --- */
+        /* MESSAGING */
         .msg-layout { display: flex; height: 100%; }
-        .inbox-list { width: 340px; border-right: 1px solid var(--border); background: var(--surface-2); display: flex; flex-direction: column; }
+        .inbox-list { width: 350px; border-right: 1px solid var(--border); background: var(--surface); display: flex; flex-direction: column; }
         .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--bg); position: relative; }
-        
-        .chat-tabs { display: flex; padding: 15px; gap: 8px; }
-        .chat-tab { flex: 1; padding: 10px; background: var(--surface); color: var(--muted); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; text-align: center; font-size: 0.8rem; font-weight: 700; transition: 0.2s; }
+        .chat-tabs { display: flex; padding: 15px; gap: 8px; border-bottom: 1px solid var(--border); }
+        .chat-tab { flex: 1; padding: 10px; background: var(--bg); color: var(--text-muted); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; text-align: center; font-size: 0.85rem; font-weight: 600; transition: 0.2s; }
         .chat-tab.active { background: var(--neon-b); color: white; border-color: var(--neon-b); }
+        .inbox-item { padding: 18px 25px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; gap: 15px; transition: 0.2s; }
+        .inbox-item:hover { background: var(--surface-hover); }
+        .avatar { width: 45px; height: 45px; border-radius: 14px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--neon-p); font-size: 1.1rem; border: 1px solid var(--border); }
 
-        .inbox-item { padding: 15px 20px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; gap: 15px; transition: 0.2s; }
-        .inbox-item:hover { background: rgba(255,255,255,0.03); }
-        .avatar { width: 42px; height: 42px; border-radius: 12px; background: var(--border); display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--neon-p); font-size: 1.1rem; }
-
-        .bubble { max-width: 75%; padding: 12px 16px; border-radius: 16px; font-size: 0.95rem; margin-bottom: 12px; line-height: 1.5; position: relative; word-wrap: break-word; }
-        .bubble.mine { align-self: flex-end; background: var(--neon-b); color: white; border-bottom-right-radius: 4px; box-shadow: 0 4px 15px rgba(96, 165, 250, 0.2); }
+        .bubble { max-width: 70%; padding: 12px 18px; border-radius: 18px; font-size: 0.95rem; margin-bottom: 12px; line-height: 1.5; position: relative; word-wrap: break-word; }
+        .bubble.mine { align-self: flex-end; background: var(--neon-b); color: white; border-bottom-right-radius: 4px; }
         .bubble.theirs { align-self: flex-start; background: var(--surface); border: 1px solid var(--border); border-bottom-left-radius: 4px; color: var(--text); }
-        .bubble.deleted { font-style: italic; opacity: 0.6; background: rgba(255,255,255,0.05) !important; color: var(--muted) !important; border: 1px dashed var(--border); box-shadow: none; }
-        
-        .msg-del-btn {
-            position: absolute; top: -10px; right: -10px; z-index: 10;
-            width: 24px; height: 24px; background: var(--surface); border: 1px solid var(--danger); 
-            color: var(--danger); border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 0.9rem; cursor: pointer; opacity: 0; transition: 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-        }
-        .bubble:hover .msg-del-btn { opacity: 1; transform: scale(1.1); }
+        .bubble.deleted { font-style: italic; opacity: 0.6; background: rgba(255,255,255,0.03) !important; color: var(--text-muted) !important; border: 1px dashed var(--border); box-shadow: none; }
+        .bubble-actions { position: absolute; top: -10px; right: -5px; display: flex; gap: 5px; opacity: 0; transition: 0.2s; }
+        .bubble:hover .bubble-actions { opacity: 1; transform: translateY(-2px); }
+        .action-btn { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; background: var(--surface); color: var(--text); font-size: 0.8rem; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        .action-btn:hover { background: white; color: black; }
+        .action-btn.del:hover { background: var(--danger); color: white; border-color: var(--danger); }
+        .ts-tag { font-size: 0.65rem; opacity: 0.7; margin-top: 4px; display: flex; justify-content: flex-end; align-items: center; gap: 5px; }
+        .msg-media { max-width: 100%; border-radius: 12px; margin-top: 5px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); transition: 0.2s; }
+        .msg-media:hover { opacity: 0.9; }
 
-        .ts-tag { font-size: 0.65rem; opacity: 0.7; margin-top: 4px; display: block; text-align: right; }
-        .msg-media { max-width: 100%; border-radius: 8px; margin-top: 5px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); }
-        .file-link { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; display: flex; align-items: center; gap: 10px; margin-top: 5px; cursor: pointer; text-decoration: none; color: white; border: 1px solid var(--border); }
+        #msg-input-area { padding: 15px; border-top: 1px solid var(--border); background: var(--surface); padding-bottom: max(15px, env(safe-area-inset-bottom)); }
 
-        /* --- MODALS --- */
-        .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
-            z-index: 200; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s;
-        }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px); z-index: 2000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s; }
         .modal-overlay.active { display: flex; opacity: 1; }
-        .modal-card { width: 95%; max-width: 500px; background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 35px; max-height: 90vh; display: flex; flex-direction: column; transform: scale(0.95); transition: transform 0.3s; position: relative; }
+        .modal-card { width: 95%; max-width: 480px; background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 35px; max-height: 85vh; display: flex; flex-direction: column; transform: scale(0.95); transition: transform 0.3s; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
         .modal-overlay.active .modal-card { transform: scale(1); }
-        
-        .modal-close-x {
-            position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--muted); font-size: 1.5rem; cursor: pointer; z-index: 10;
-        }
+        .modal-close-x { position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; z-index: 10; }
         .modal-close-x:hover { color: white; }
-
+        
         .input-group { background: var(--bg); border: 1px solid var(--border); padding: 14px; border-radius: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; transition: border-color 0.2s; }
         .input-group:focus-within { border-color: var(--neon-b); }
         .input-group input { background: transparent; border: none; color: white; flex: 1; font-size: 1rem; }
-        
         .btn-main { width: 100%; padding: 16px; background: var(--text); color: black; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,255,255,0.1); }
         .hidden { display: none !important; }
         
-        /* --- ADMIN PANEL --- */
         .admin-row { padding: 15px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
-        .status-badge { padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; text-transform: uppercase; font-weight: bold; }
-        .status-pending { background: rgba(255, 165, 0, 0.2); color: orange; }
-        .status-approved { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .status-badge { padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; text-transform: uppercase; font-weight: bold; background: var(--active); color: var(--text-muted); }
+        .status-pending { background: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
         .admin-actions { display: flex; gap: 10px; align-items: center; margin-top: 5px; }
-        .limit-input { background: var(--bg); border: 1px solid var(--border); color: white; padding: 5px; width: 60px; border-radius: 6px; text-align: center; }
+        .limit-input { background: var(--bg); border: 1px solid var(--border); color: white; padding: 8px; width: 70px; border-radius: 8px; text-align: center; }
 
-        /* --- MOBILE --- */
         @media (max-width: 768px) {
             .sidebar { display: none; }
             .mobile-nav { display: flex; }
@@ -184,27 +137,26 @@
             .inbox-list { width: 100%; }
             .chat-area { position: absolute; inset: 0; transform: translateX(100%); transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 50; }
             .chat-area.open { transform: translateX(0); }
-            .header button.back-btn { display: block; }
-            .inbox-del { opacity: 1; } 
-            
+            .bubble-actions { opacity: 1; top: -12px; right: 0; } 
+            .art-info { transform: translateY(0); background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); }
             .gallery-grid { grid-template-columns: repeat(2, 1fr); padding: 15px; gap: 10px; }
             .modal-card { padding: 25px; width: 90%; }
+            .back-btn { display: block; }
         }
-        .back-btn { display: none; background: none; border: none; color: white; font-size: 1.5rem; margin-right: 10px; }
-        .controls-3d { position: absolute; bottom: 30px; display: flex; gap: 20px; z-index: 10; width: 100%; justify-content: center; }
-        .ctrl-btn { width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 1px solid var(--border); color: white; cursor: pointer; backdrop-filter: blur(5px); }
+        @media (min-width: 769px) { .back-btn { display: none; } }
         
-        .preview-box { width: 100%; height: 100px; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; border-radius: 8px; margin-top: 10px; overflow: hidden; border: 1px solid var(--border); }
-        .preview-box img, .preview-box video { max-width: 100%; max-height: 100%; }
+        .back-btn { background: none; border: none; color: white; font-size: 1.5rem; margin-right: 15px; cursor: pointer; }
+        .controls-3d { position: absolute; bottom: 30px; display: flex; gap: 20px; z-index: 10; width: 100%; justify-content: center; }
+        .ctrl-btn { width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 1px solid var(--border); color: white; cursor: pointer; backdrop-filter: blur(5px); transition: 0.2s; }
+        .ctrl-btn:hover { background: white; color: black; }
     </style>
 </head>
 <body>
 
     <div id="toast-container"></div>
 
-    <!-- SIDEBAR (PC) -->
     <nav class="sidebar">
-        <div style="font-weight:900; color:var(--neon-b); font-size:1.5rem; margin-bottom:40px; cursor:default;">S10</div>
+        <div style="font-weight:900; color:var(--neon-b); font-size:1.5rem; margin-bottom:40px; cursor:default; font-family:'JetBrains Mono';">V12</div>
         <button id="nav-gallery" class="nav-btn active" onclick="switchView('gallery')" title="Gallery"><i class="ri-gallery-view-2"></i></button>
         <button id="nav-msg" class="nav-btn" onclick="switchView('messaging')" title="Comms"><i class="ri-chat-4-fill"></i></button>
         <button class="nav-btn" onclick="openUpload()" title="Upload"><i class="ri-upload-cloud-2-fill"></i></button>
@@ -213,11 +165,10 @@
         <button id="auth-btn" class="nav-btn pulse" onclick="toggleModal('auth')" title="Connect"><i class="ri-user-3-fill"></i></button>
     </nav>
 
-    <!-- MOBILE NAV -->
     <nav class="mobile-nav">
         <button class="nav-btn active" onclick="switchView('gallery')"><i class="ri-gallery-view-2"></i></button>
         <button class="nav-btn" onclick="switchView('messaging')"><i class="ri-chat-4-fill"></i></button>
-        <button class="nav-btn" onclick="openUpload()" style="background:var(--neon-b); color:white; border-radius:50%; margin-bottom:35px; box-shadow:0 0 25px rgba(96, 165, 250, 0.4);"><i class="ri-add-line"></i></button>
+        <button class="nav-btn" onclick="openUpload()" style="background:var(--neon-b); color:white; border-radius:50%; margin-bottom:40px; box-shadow:0 0 25px rgba(96, 165, 250, 0.4);"><i class="ri-add-line"></i></button>
         <button id="mob-admin-btn" class="nav-btn hidden" style="color:var(--danger)" onclick="toggleModal('admin')"><i class="ri-eye-2-fill"></i></button>
         <button id="mob-auth-btn" class="nav-btn pulse" onclick="toggleModal('auth')"><i class="ri-user-3-fill"></i></button>
     </nav>
@@ -226,7 +177,7 @@
         <!-- VIEW: GALLERY -->
         <section id="view-gallery" class="view active">
             <div class="header">
-                <div style="font-weight:700; font-size:1.2rem; letter-spacing:1px;">PUBLIC GRID</div>
+                <div style="font-weight:800; font-size:1.2rem; letter-spacing:1px; color:white;">PUBLIC GRID</div>
                 <div style="display:flex; gap:10px;">
                     <button onclick="toggle3D()" class="nav-btn active" style="width:40px; height:40px; margin:0;" title="Toggle 3D/Grid"><i class="ri-box-3-line"></i></button>
                 </div>
@@ -245,14 +196,14 @@
         <section id="view-messaging" class="view">
             <div class="msg-layout">
                 <div class="inbox-list">
-                    <div style="padding:25px; border-bottom:1px solid var(--border);">
-                        <h2 style="margin-bottom:15px; letter-spacing:1px;">INBOX</h2>
+                    <div style="padding:25px 20px;">
+                        <h2 style="margin-bottom:15px; letter-spacing:1px; font-weight:800;">INBOX</h2>
                         <div class="chat-tabs">
                             <div class="chat-tab active" onclick="setChatType('global')">Global</div>
                             <div class="chat-tab" onclick="setChatType('group')">Groups</div>
                             <div class="chat-tab" onclick="setChatType('dm')">Direct</div>
                         </div>
-                        <button id="new-chat-btn" onclick="openNewChat()" style="width:100%; padding:12px; margin-top:15px; background:rgba(255,255,255,0.03); border:1px dashed var(--border); color:var(--neon-b); border-radius:10px; cursor:pointer; font-weight:600;">+ New Transmission</button>
+                        <button id="new-chat-btn" onclick="openNewChat()" style="width:100%; padding:14px; margin-top:15px; background:rgba(255,255,255,0.03); border:1px dashed var(--border); color:var(--neon-b); border-radius:12px; cursor:pointer; font-weight:600; transition:0.2s;">+ New Transmission</button>
                     </div>
                     <div id="inbox-container" style="flex:1; overflow-y:auto;"></div>
                 </div>
@@ -260,37 +211,43 @@
                 <div id="chat-stage" class="chat-area">
                     <div class="header">
                         <button class="back-btn" onclick="closeChatMobile()"><i class="ri-arrow-left-line"></i></button>
-                        <h3 id="chat-title">Select Frequency</h3>
+                        <h3 id="chat-title" style="font-weight:700;">Select Frequency</h3>
                         <button id="btn-del-group" onclick="deleteGroup()" class="hidden" style="background:none; border:none; color:var(--danger); font-size:1.2rem;" title="Delete Group"><i class="ri-delete-bin-5-line"></i></button>
                     </div>
                     
                     <div id="msg-feed" style="flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column;"></div>
                     
-                    <!-- INPUT AREA -->
-                    <div id="msg-input-area" style="padding:15px; border-top:1px solid var(--border); background:var(--surface);">
-                        <!-- FILE PREVIEW CONTAINER -->
-                        <div id="chat-file-preview" style="display:none; margin-bottom:10px; position:relative; width:fit-content;">
-                            <img id="preview-img" style="max-height:100px; border-radius:8px; border:1px solid var(--border);">
-                            <button onclick="clearChatFile()" style="position:absolute; top:-5px; right:-5px; background:var(--danger); border:none; color:white; border-radius:50%; width:20px; height:20px; cursor:pointer;">&times;</button>
+                    <div id="msg-input-area">
+                        <!-- PREVIEW -->
+                        <div id="chat-file-preview" style="display:none; padding-bottom:10px;">
+                            <div style="position:relative; width:fit-content;">
+                                <img id="preview-img" style="max-height:100px; border-radius:12px; border:1px solid var(--border);">
+                                <button onclick="clearChatFile()" style="position:absolute; top:-8px; right:-8px; background:var(--danger); border:none; color:white; border-radius:50%; width:24px; height:24px; cursor:pointer; box-shadow:0 2px 5px black;">&times;</button>
+                            </div>
+                        </div>
+
+                        <!-- EDIT UI -->
+                        <div id="edit-ui" class="hidden" style="display:flex; align-items:center; gap:10px; margin-bottom:10px; background:var(--surface-2); padding:10px; border-radius:8px;">
+                            <i class="ri-pencil-line" style="color:var(--neon-p)"></i> <span style="font-size:0.8rem; color:var(--text-muted);">Editing Message...</span>
+                            <div style="flex:1"></div>
+                            <button onclick="cancelEdit()" style="background:none; border:none; color:var(--danger); cursor:pointer;">Cancel</button>
                         </div>
 
                         <form onsubmit="sendMessage(event)" style="display:flex; gap:10px; align-items:center;">
-                            <!-- Improved File Input -->
-                            <input type="file" id="chat-file" style="display:none;" onchange="handleChatFileSelect()" accept="image/*,video/*,audio/*,application/pdf">
-                            <button type="button" onclick="document.getElementById('chat-file').click()" style="background:none; border:none; color:var(--muted); font-size:1.4rem; cursor:pointer;" title="Attach Media"><i class="ri-attachment-2"></i></button>
+                            <input type="file" id="chat-file" style="display:none;" onchange="handleChatFileSelect()" accept="image/*,video/*">
+                            <button type="button" onclick="document.getElementById('chat-file').click()" style="background:none; border:none; color:var(--text-muted); font-size:1.4rem; cursor:pointer; transition:0.2s;" onmouseover="this.style.color='white'"><i class="ri-attachment-2"></i></button>
                             
-                            <select id="msg-timer" style="background:var(--bg); color:var(--danger); border:1px solid var(--border); border-radius:8px; padding:5px; font-size:0.8rem; cursor:pointer;">
+                            <select id="msg-timer" style="background:var(--bg); color:var(--danger); border:1px solid var(--border); border-radius:10px; padding:8px; font-size:0.8rem; cursor:pointer; outline:none;">
                                 <option value="0">∞</option>
                                 <option value="86400000">24h</option>
                                 <option value="172800000">48h</option>
                             </select>
                             
-                            <input id="msg-input" placeholder="Message..." style="flex:1; background:var(--bg); border:1px solid var(--border); padding:12px 15px; border-radius:12px; color:white;">
-                            <button class="nav-btn active" style="width:45px; height:45px; border-radius:12px; margin-bottom:0;"><i class="ri-send-plane-fill"></i></button>
+                            <input id="msg-input" placeholder="Transmit..." style="flex:1; background:var(--bg); border:1px solid var(--border); padding:14px 16px; border-radius:14px; color:white; font-size:1rem;">
+                            <button class="nav-btn active" style="width:50px; height:50px; border-radius:14px; margin-bottom:0; flex-shrink:0;"><i class="ri-send-plane-fill"></i></button>
                         </form>
                     </div>
                     
-                    <!-- GUEST LOCK -->
                     <div id="guest-input-lock" class="hidden" style="padding:30px; text-align:center; border-top:1px solid var(--border); background:var(--surface);">
                         <button class="btn-main" onclick="toggleModal('auth')" style="background:var(--neon-p); color:white; width:auto; padding:12px 40px; margin:0;">Login to Transmit</button>
                     </div>
@@ -300,14 +257,14 @@
     </div>
 
     <!-- MODALS -->
-    <!-- AUTH -->
+    
     <div id="modal-auth" class="modal-overlay" onclick="if(event.target===this) toggleModal('auth')">
         <div class="modal-card">
             <button class="modal-close-x" onclick="toggleModal('auth')"><i class="ri-close-line"></i></button>
             <h2 style="text-align:center; margin-bottom:30px; font-weight:900; letter-spacing:2px;">IDENTITY</h2>
             <div id="auth-forms">
-                <div class="input-group"><i class="ri-mail-line" style="color:var(--muted)"></i><input id="email" placeholder="Email"></div>
-                <div class="input-group"><i class="ri-key-2-line" style="color:var(--muted)"></i><input id="pass" type="password" placeholder="Password"></div>
+                <div class="input-group"><i class="ri-mail-line" style="color:var(--text-muted)"></i><input id="email" placeholder="Email"></div>
+                <div class="input-group"><i class="ri-key-2-line" style="color:var(--text-muted)"></i><input id="pass" type="password" placeholder="Password"></div>
                 <button class="btn-main" style="background:var(--neon-b); color:white;" onclick="login()">Connect</button>
                 <div style="display:flex; gap:10px; margin-top:15px;">
                     <input id="new-user" placeholder="Callsign" style="background:var(--bg); border:1px solid var(--border); padding:12px; flex:1; color:white; border-radius:10px;">
@@ -317,33 +274,28 @@
             <div id="profile-view" class="hidden" style="text-align:center;">
                 <div style="width:80px; height:80px; background:var(--surface-2); border-radius:50%; margin:0 auto 20px; display:flex; align-items:center; justify-content:center; color:var(--neon-p); font-size:2rem; font-weight:bold;" id="prof-initial">U</div>
                 <h3 id="prof-name">User</h3>
-                <p id="prof-stats" style="color:var(--muted); font-size:0.9rem; margin-bottom:30px; font-family:'JetBrains Mono';"></p>
+                <p id="prof-stats" style="color:var(--text-muted); font-size:0.9rem; margin-bottom:30px; font-family:'JetBrains Mono';"></p>
                 <button class="btn-main" style="background:var(--danger); color:white;" onclick="logout()">Disconnect</button>
             </div>
         </div>
     </div>
 
-    <!-- UPLOAD -->
     <div id="modal-upload" class="modal-overlay" onclick="if(event.target===this) toggleModal('upload')">
         <div class="modal-card">
             <button class="modal-close-x" onclick="toggleModal('upload')"><i class="ri-close-line"></i></button>
             <h3>Upload to Grid</h3>
-            
-            <div style="border:2px dashed var(--border); padding:20px; text-align:center; margin:20px 0; border-radius:12px; cursor:pointer; background:var(--surface-2);" onclick="document.getElementById('gal-file').click()">
+            <div style="border:2px dashed var(--border); padding:30px; text-align:center; margin:20px 0; border-radius:16px; cursor:pointer; background:var(--surface-2); transition:0.2s;" onclick="document.getElementById('gal-file').click()" onmouseover="this.style.borderColor='var(--neon-p)'" onmouseout="this.style.borderColor='var(--border)'">
                 <div id="upload-preview-area">
-                    <i class="ri-upload-cloud-2-line" style="font-size:2rem; color:var(--neon-p);"></i>
-                    <p style="margin-top:10px; color:var(--muted); font-size:0.9rem;">Select Image/Video</p>
+                    <i class="ri-upload-cloud-2-line" style="font-size:2.5rem; color:var(--neon-p);"></i>
+                    <p style="margin-top:10px; color:var(--text-muted); font-size:0.9rem;">Select Image/Video</p>
                 </div>
             </div>
-            <!-- Improved Input with Accept Attribute -->
             <input type="file" id="gal-file" style="display:none;" accept="image/*,video/*" onchange="previewUpload()">
-            
             <div class="input-group"><input id="gal-title" placeholder="Artifact Title"></div>
             <button class="btn-main" style="background:var(--neon-p); color:white;" onclick="uploadGallery()">Publish</button>
         </div>
     </div>
 
-    <!-- NEW CHAT -->
     <div id="modal-new-chat" class="modal-overlay" onclick="if(event.target===this) toggleModal('new-chat')">
         <div class="modal-card">
             <button class="modal-close-x" onclick="toggleModal('new-chat')"><i class="ri-close-line"></i></button>
@@ -357,11 +309,17 @@
         </div>
     </div>
 
-    <!-- ADMIN -->
     <div id="modal-admin" class="modal-overlay" onclick="if(event.target===this) toggleModal('admin')">
         <div class="modal-card" style="max-width:800px; height:85vh;">
             <button class="modal-close-x" onclick="toggleModal('admin')"><i class="ri-close-line"></i></button>
             <h2 style="color:var(--danger)">GOD MODE</h2>
+            <div id="admin-edit-ui" class="hidden" style="margin-top:10px; padding:10px; background:var(--surface-2); border-radius:8px;">
+                <input id="admin-edit-input" style="width:100%; background:var(--bg); border:1px solid var(--border); padding:8px; color:white; border-radius:6px; margin-bottom:5px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <label style="font-size:0.8rem; color:var(--text-muted);"><input type="checkbox" id="admin-stealth-check"> Show 'Edited' Label?</label>
+                    <button class="btn-main" onclick="submitAdminEdit()" style="width:auto; padding:5px 15px; margin:0; font-size:0.8rem;">Save</button>
+                </div>
+            </div>
             <div style="display:flex; gap:10px; margin-bottom:15px; margin-top:20px;">
                 <button onclick="renderAdmin('users')" class="nav-btn" style="width:auto; padding:0 20px; font-size:0.9rem; margin:0;">Users</button>
                 <button onclick="renderAdmin('dms')" class="nav-btn" style="width:auto; padding:0 20px; font-size:0.9rem; margin:0;">Spy DMs</button>
@@ -371,17 +329,27 @@
         </div>
     </div>
 
-    <!-- LIGHTBOX -->
     <div id="modal-lightbox" class="modal-overlay" onclick="if(event.target===this) toggleModal('lightbox')">
-        <div style="position:relative;">
-            <img id="lb-img" style="max-width:95vw; max-height:85vh; object-fit:contain; box-shadow:0 0 100px rgba(0,0,0,0.8); border-radius:4px;">
-            <button id="lb-del-btn" onclick="deleteActiveImage()" style="position:absolute; top:-50px; right:0; background:var(--danger); color:white; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,0.5);"><i class="ri-delete-bin-line"></i></button>
+        <div style="position:relative; display:flex; flex-direction:column; align-items:center;">
+            <img id="lb-img" style="max-width:95vw; max-height:80vh; object-fit:contain; box-shadow:0 0 100px rgba(0,0,0,0.8); border-radius:4px;">
+            <div style="margin-top:20px; background:rgba(0,0,0,0.8); padding:15px; border-radius:12px; min-width:300px; text-align:center;">
+                <h3 id="lb-title" style="color:white; margin-bottom:5px;">Title</h3>
+                <p id="lb-author" style="color:var(--neon-b); font-size:0.9rem;">Author</p>
+                <div id="lb-admin-tools" class="hidden" style="margin-top:10px;">
+                    <button onclick="enableTitleEdit()" style="background:var(--surface-2); border:1px solid var(--border); color:white; padding:5px 10px; border-radius:6px; cursor:pointer; font-size:0.8rem;">Edit Info</button>
+                    <button onclick="deleteActiveImage()" style="background:var(--danger); border:none; color:white; padding:5px 10px; border-radius:6px; cursor:pointer; font-size:0.8rem;">Delete</button>
+                </div>
+                <div id="lb-edit-ui" class="hidden" style="margin-top:10px;">
+                    <input id="lb-new-title" style="width:100%; background:var(--bg); border:1px solid var(--border); color:white; padding:8px; border-radius:6px; margin-bottom:5px;">
+                    <button onclick="saveTitleEdit()" class="btn-main" style="width:auto; padding:5px 15px; margin:0; font-size:0.8rem; background:var(--success);">Save</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         // CONFIG
-                 const firebaseConfig = {
+        const firebaseConfig = {
     apiKey: "AIzaSyAtqCvW8QW76WMsweQlHEMbfxJRNWSsUak",
     authDomain: "serdit-1e0aa.firebaseapp.com",
     databaseURL: "https://serdit-1e0aa-default-rtdb.firebaseio.com",
@@ -394,6 +362,8 @@
         const CLOUD_NAME = "drnmtmsnn"; 
         const PRESET = "se_reddit";
         const ADMIN_EMAIL = "falullah@admin.com"; 
+        
+
         // INIT
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
@@ -402,14 +372,13 @@
         let state = {
             user: null, profile: null, chatType: 'global', activeChat: 'global_messages',
             images: [], galleryMode: 'grid', carouselIndex: 0, uploadFile: null,
-            activeImage: null
+            activeImage: null, editingMsgId: null
         };
 
         // --- AUTH & LOAD ---
         auth.onAuthStateChanged(async u => {
             state.user = u;
             if(u) {
-                // LOGGED IN
                 const snap = await db.ref(`users/${u.uid}`).once('value');
                 state.profile = snap.val() || { role: 'pending', username: 'User', storageUsed: 0, storageLimit: 50 };
                 
@@ -435,7 +404,6 @@
                 loadInbox();
                 toast(`Connected: ${state.profile.username}`, "success");
             } else {
-                // GUEST MODE
                 document.getElementById('auth-forms').classList.remove('hidden');
                 document.getElementById('profile-view').classList.add('hidden');
                 document.getElementById('admin-btn').classList.add('hidden');
@@ -449,13 +417,24 @@
             loadGallery();
         });
 
+        // --- SECURITY ---
+        function escapeHtml(text) {
+            if (!text) return text;
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
         // --- TOASTS ---
         function toast(msg, type='info') {
             const c = document.getElementById('toast-container');
             const d = document.createElement('div');
             d.className = `toast ${type}`;
             const icon = type === 'success' ? 'ri-checkbox-circle-fill' : (type === 'error' ? 'ri-error-warning-fill' : 'ri-information-fill');
-            d.innerHTML = `<i class="${icon}"></i> ${msg}`;
+            d.innerHTML = `<i class="${icon}"></i> ${escapeHtml(msg)}`;
             c.appendChild(d);
             setTimeout(() => d.remove(), 3000);
         }
@@ -498,10 +477,10 @@
             if(state.galleryMode === 'grid') {
                 grid.style.display = 'grid'; view3d.classList.remove('active');
                 grid.innerHTML = state.images.map(img => `
-                    <div class="art-card" onclick="openLight('${img.id}', '${img.url}', '${img.uid}')">
+                    <div class="art-card" onclick="openLight('${img.id}', '${img.url}', '${img.uid}', '${escapeHtml(img.title)}', '${escapeHtml(img.author)}')">
                         <img src="${img.url}" loading="lazy">
-                        <div style="position:absolute; bottom:0; background:linear-gradient(to top, rgba(0,0,0,0.9), transparent); width:100%; padding:15px; font-size:0.8rem;">
-                            <b style="font-size:0.9rem;">${img.title}</b><br><span style="color:var(--neon-b)">${img.author}</span>
+                        <div class="art-info">
+                            <b style="font-size:0.9rem;">${escapeHtml(img.title)}</b><br><span style="color:var(--neon-b)">${escapeHtml(img.author)}</span>
                         </div>
                     </div>`).join('');
             } else {
@@ -518,15 +497,37 @@
         function rotate3D(dir) { state.carouselIndex += dir; update3D(); }
         function update3D() { document.getElementById('carousel-track').style.transform = `rotateY(${state.carouselIndex * -45}deg)`; }
         
-        function openLight(id, url, uid) { 
-            state.activeImage = {id, uid};
-            document.getElementById('lb-img').src=url; 
-            const delBtn = document.getElementById('lb-del-btn');
-            if(state.user && (uid === state.user.uid || state.profile.role === 'admin')) delBtn.classList.remove('hidden');
-            else delBtn.classList.add('hidden');
+        function openLight(id, url, uid, title, author) { 
+            state.activeImage = {id, uid, title};
+            document.getElementById('lb-img').src = url;
+            document.getElementById('lb-title').innerText = title;
+            document.getElementById('lb-author').innerText = author;
+            
+            const tools = document.getElementById('lb-admin-tools');
+            const editUi = document.getElementById('lb-edit-ui');
+            editUi.classList.add('hidden'); // Reset edit mode
+
+            // Show tools if Owner OR Admin
+            if(state.user && (uid === state.user.uid || state.profile.role === 'admin')) {
+                tools.classList.remove('hidden');
+            } else {
+                tools.classList.add('hidden');
+            }
             toggleModal('lightbox'); 
         }
 
+        // --- GALLERY EDITING ---
+        function enableTitleEdit() {
+            document.getElementById('lb-edit-ui').classList.remove('hidden');
+            document.getElementById('lb-new-title').value = state.activeImage.title;
+        }
+        function saveTitleEdit() {
+            const newTitle = document.getElementById('lb-new-title').value;
+            db.ref(`images/${state.activeImage.id}`).update({ title: newTitle });
+            document.getElementById('lb-title').innerText = newTitle;
+            document.getElementById('lb-edit-ui').classList.add('hidden');
+            toast("Details Updated");
+        }
         function deleteActiveImage() {
             if(!confirm("Destroy Artifact?")) return;
             db.ref(`images/${state.activeImage.id}`).remove();
@@ -576,6 +577,7 @@
             const list = document.getElementById('inbox-container');
             list.innerHTML = '';
             
+            // GLOBAL
             if(state.chatType === 'global') {
                 list.innerHTML = `<div class="inbox-item" onclick="openChat('global_messages', 'Global Chat')"><div class="avatar">G</div> <div style="font-weight:bold;">Global Chat</div></div>`;
                 if(state.activeChat === 'global_messages') openChat('global_messages', 'Global Chat');
@@ -594,12 +596,10 @@
                     const ids = Object.keys(snap.val());
                     for(const id of ids) {
                         let name = "Chat";
-                        let isGroup = false;
                         if(state.chatType === 'group') {
                             const i = await db.ref(`groups/${id}/info`).once('value');
                             if(!i.exists()) continue; 
                             name = i.val()?.name;
-                            isGroup = true;
                         } else {
                             const d = await db.ref(`dms/${id}`).once('value');
                             const mems = Object.keys(d.val().members);
@@ -607,10 +607,9 @@
                             const u = await db.ref(`users/${other}`).once('value');
                             name = u.val()?.username;
                         }
-                        
                         const el = document.createElement('div');
                         el.className = 'inbox-item';
-                        el.innerHTML = `<div class="avatar">${name[0].toUpperCase()}</div> <div><div style="font-weight:bold;">${name}</div><div style="font-size:0.75rem; color:var(--muted);">Encrypted</div></div>`;
+                        el.innerHTML = `<div class="avatar">${name[0].toUpperCase()}</div> <div><div style="font-weight:bold;">${escapeHtml(name)}</div></div>`;
                         el.onclick = () => openChat(id, name);
                         list.appendChild(el);
                     }
@@ -624,26 +623,20 @@
             document.getElementById('msg-feed').innerHTML = '';
             document.getElementById('chat-stage').classList.add('open');
             
+            // Guest Lock
             const inputArea = document.getElementById('msg-input-area');
             const guestLock = document.getElementById('guest-input-lock');
-            
-            if(!state.user) {
-                inputArea.classList.add('hidden');
-                guestLock.classList.remove('hidden');
-            } else {
-                inputArea.classList.remove('hidden');
-                guestLock.classList.add('hidden');
-            }
+            if(!state.user) { inputArea.classList.add('hidden'); guestLock.classList.remove('hidden'); } 
+            else { inputArea.classList.remove('hidden'); guestLock.classList.add('hidden'); }
 
+            // Group Delete
             const delBtn = document.getElementById('btn-del-group');
             if(state.user && state.chatType === 'group') {
                 const info = await db.ref(`groups/${id}/info`).once('value');
                 const members = info.val()?.members || {};
                 if(state.profile.role === 'admin' || Object.keys(members)[0] === state.user.uid) delBtn.classList.remove('hidden');
                 else delBtn.classList.add('hidden');
-            } else {
-                delBtn.classList.add('hidden');
-            }
+            } else { delBtn.classList.add('hidden'); }
 
             const root = state.chatType === 'global' ? 'global_messages' : (state.chatType === 'dm' ? `dms/${id}/messages` : `groups/${id}/messages`);
             db.ref(root).limitToLast(50).on('child_added', snap => renderMessage(snap, root));
@@ -663,9 +656,7 @@
         function renderMessage(snap, rootPath) {
             const msg = snap.val();
             if(msg.expiresAt && Date.now() > msg.expiresAt) return;
-            
             const isMine = state.user && msg.uid === state.user.uid;
-            
             const div = document.createElement('div');
             div.id = `msg-${snap.key}`;
             div.className = `bubble ${isMine ? 'mine' : 'theirs'} ${msg.isDeleted ? 'deleted' : ''}`;
@@ -679,22 +670,68 @@
 
             let content = "";
             if(!isMine && state.chatType !== 'dm') 
-                content += `<div style="font-size:0.7rem; font-weight:bold; color:var(--neon-p); margin-bottom:2px;">${msg.user}</div>`;
+                content += `<div style="font-size:0.7rem; font-weight:bold; color:var(--neon-p); margin-bottom:2px;">${escapeHtml(msg.user)}</div>`;
             
             if(msg.type === 'image') content += `<img src="${msg.url}" class="msg-media" onclick="window.open(this.src)">`;
             else if(msg.type === 'video') content += `<video src="${msg.url}" controls class="msg-media"></video>`;
             else if(msg.type === 'audio') content += `<audio src="${msg.url}" controls style="width:100%; margin-top:5px;"></audio>`;
-            else if(msg.type === 'file') content += `<a href="${msg.url}" target="_blank" class="file-link"><i class="ri-file-line"></i> Download File</a>`;
             
-            if(msg.text) content += `<div>${msg.text}</div>`;
+            if(msg.text) content += `<div>${escapeHtml(msg.text)}</div>`;
             
+            // EDITED TAG
+            if(msg.isEdited) content += `<span style="font-size:0.6rem; color:var(--text-muted); font-style:italic; margin-right:5px;">(edited)</span>`;
+
             const time = new Date(msg.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
             content += `<span class="ts-tag">${time}</span>`;
 
-            if(state.user && (msg.uid === state.user.uid || state.profile.role === 'admin')) {
-                content += `<button class="msg-del-btn" onclick="deleteMsg('${rootPath}', '${key}')"><i class="ri-delete-bin-line"></i></button>`;
+            // ACTIONS (Edit/Delete)
+            let actions = `<div class="bubble-actions">`;
+            const canEdit = state.profile && (state.profile.role === 'admin' || (isMine && (Date.now() - msg.ts) < 600000)); // 10 mins
+            
+            if(canEdit && !msg.type) { // Can edit text only
+                actions += `<div class="action-btn" onclick="startEdit('${rootPath}', '${key}', '${escapeHtml(msg.text).replace(/'/g, "\\'")}')"><i class="ri-pencil-line"></i></div>`;
             }
-            return content;
+            if(state.user && (isMine || state.profile.role === 'admin')) {
+                actions += `<div class="action-btn del" onclick="deleteMsg('${rootPath}', '${key}')"><i class="ri-delete-bin-line"></i></div>`;
+            }
+            actions += `</div>`;
+
+            return content + actions;
+        }
+
+        // --- EDITING LOGIC ---
+        function startEdit(path, key, text) {
+            state.editingMsgId = { path, key };
+            
+            if(state.profile.role === 'admin') {
+                document.getElementById('admin-edit-ui').classList.remove('hidden');
+                document.getElementById('admin-edit-input').value = text;
+                document.getElementById('admin-stealth-check').checked = true; // Default show label
+            } else {
+                document.getElementById('edit-ui').classList.remove('hidden');
+                document.getElementById('msg-input').value = text;
+                document.getElementById('msg-input').focus();
+            }
+        }
+
+        function cancelEdit() {
+            state.editingMsgId = null;
+            document.getElementById('edit-ui').classList.add('hidden');
+            document.getElementById('msg-input').value = '';
+        }
+
+        function submitAdminEdit() {
+            if(!state.editingMsgId) return;
+            const newText = document.getElementById('admin-edit-input').value;
+            const showLabel = document.getElementById('admin-stealth-check').checked;
+            
+            db.ref(`${state.editingMsgId.path}/${state.editingMsgId.key}`).update({
+                text: newText,
+                isEdited: showLabel // Admin can choose to hide this
+            });
+            document.getElementById('admin-edit-ui').classList.add('hidden');
+            state.editingMsgId = null;
+            toast("Message Edited");
         }
 
         function deleteMsg(path, key) {
@@ -703,23 +740,22 @@
             toast("Message Retracted");
         }
 
+        // --- FILES ---
         function handleChatFileSelect() {
             state.uploadFile = document.getElementById('chat-file').files[0];
             const area = document.getElementById('chat-file-preview');
             const img = document.getElementById('preview-img');
-            
             if(state.uploadFile) {
                 const reader = new FileReader();
                 reader.onload = e => {
                     const type = state.uploadFile.type.split('/')[0];
                     if(type === 'image') img.src = e.target.result;
-                    else img.src = ''; // Can add generic icon for other types
+                    else img.src = ''; 
                     area.style.display = 'block';
                 };
                 reader.readAsDataURL(state.uploadFile);
             }
         }
-        
         function clearChatFile() {
             state.uploadFile = null;
             document.getElementById('chat-file').value = '';
@@ -729,12 +765,19 @@
         async function sendMessage(e) {
             e.preventDefault();
             if(!state.activeChat || !state.user) return; 
-            
             if(state.profile.role !== 'approved' && state.profile.role !== 'admin') return toast("Account Pending Approval", "error");
 
             const txt = document.getElementById('msg-input').value;
-            const timer = parseInt(document.getElementById('msg-timer').value);
             
+            // Handle User Edit
+            if(state.editingMsgId && state.profile.role !== 'admin') {
+                const root = state.chatType === 'global' ? 'global_messages' : (state.chatType === 'dm' ? `dms/${state.activeChat}/messages` : `groups/${state.activeChat}/messages`);
+                await db.ref(`${root}/${state.editingMsgId.key}`).update({ text: txt, isEdited: true });
+                cancelEdit();
+                return;
+            }
+
+            const timer = parseInt(document.getElementById('msg-timer').value);
             if(!txt && !state.uploadFile) return;
 
             let mediaData = { type: null, url: null };
@@ -760,7 +803,7 @@
             clearChatFile();
         }
 
-        // --- CORE UTILS ---
+        // --- UTILS ---
         async function uploadToCloud(file) {
             const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', PRESET); fd.append('resource_type', 'auto'); 
             try {
@@ -817,7 +860,7 @@
                     if(mode === 'users') {
                         const u = c.val();
                         const badge = u.role === 'pending' ? `<span class="status-badge status-pending">PENDING</span>` : `<span class="status-badge status-approved">CITIZEN</span>`;
-                        info = `<div>${badge} <b style="color:var(--neon-b)">${u.username}</b><br><span style="font-size:0.75rem; color:gray">${u.email} // ${u.password}</span></div>`;
+                        info = `<div>${badge} <b style="color:var(--neon-b)">${escapeHtml(u.username)}</b><br><span style="font-size:0.75rem; color:gray">${escapeHtml(u.email)} // ${escapeHtml(u.password)}</span></div>`;
                         
                         let actions = `<div class="admin-actions">`;
                         if(u.role === 'pending') {
@@ -837,7 +880,6 @@
                 });
             });
         }
-        
         function spyChat(id, type) { toggleModal('admin'); state.chatType = type === 'dms' ? 'dm' : 'group'; openChat(id, "GOD MODE: " + id); }
         
         window.approveUser = (uid) => { 
@@ -845,13 +887,11 @@
             db.ref(`users/${uid}`).update({ role: 'approved', storageLimit: limit });
             toast("User Approved", "success"); renderAdmin('users'); 
         };
-        
         window.updateLimit = (uid) => {
             const limit = parseInt(document.getElementById(`limit-${uid}`).value) || 50;
             db.ref(`users/${uid}/storageLimit`).set(limit);
             toast("Limit Updated", "success");
         };
-
         window.banUser = (uid) => { db.ref(`users/${uid}/role`).set('banned'); toast("User Banned", "error"); renderAdmin('users'); };
 
         // --- AUTH ---
