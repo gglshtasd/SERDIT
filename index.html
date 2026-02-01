@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SERDIT | Panopticon</title>
+    <title>SERDIT | System v7</title>
     
     <!-- FONTS -->
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=JetBrains+Mono:wght@400;800&display=swap" rel="stylesheet">
@@ -15,11 +15,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     
-    <!-- AI & MEDIA ENGINE -->
-    <!-- TensorFlow.js for Client-Side Analysis -->
+    <!-- AI ENGINE -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/toxicity"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
 
     <style>
         /* --- THEME: VOID/NEON --- */
@@ -47,86 +45,137 @@
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
 
-        /* --- LIQUID LAYOUT --- */
+        /* --- LAYOUT --- */
         .app-shell { display: flex; width: 100%; height: 100%; position: relative; }
         
-        /* SIDEBAR (Drawer on Mobile) */
+        /* SIDEBAR */
         .sidebar {
             width: var(--nav-w); background: var(--surface); border-right: 1px solid var(--border);
             display: flex; flex-direction: column; z-index: 100; flex-shrink: 0;
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
+        .sidebar-header {
+            padding: 30px 20px; text-align: center; border-bottom: 1px solid var(--border); position: relative;
+        }
+        .exit-sidebar-btn {
+            position: absolute; top: 10px; right: 10px; background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; display: none;
+        }
 
         .main-stage { flex: 1; position: relative; background: var(--bg); display: flex; flex-direction: column; overflow: hidden; }
 
+        /* --- FAB --- */
+        .fab-container { position: fixed; bottom: 30px; right: 30px; z-index: 500; filter: drop-shadow(0 0 10px var(--neon-blue)); }
+        .fab {
+            width: 60px; height: 60px; border-radius: 50%; background: var(--surface); 
+            border: 2px solid var(--neon-blue); color: var(--neon-blue); font-size: 1.5rem;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .fab:hover { transform: scale(1.1); background: var(--neon-blue); color: white; }
+        .fab:active { transform: scale(0.9); }
+        .fab.nexus-active { border-color: var(--neon-green); color: var(--neon-green); background: var(--surface); }
+        .fab.nexus-active:hover { background: var(--neon-green); color: black; }
+
         /* --- NEXUS (CHAT) --- */
-        .nexus-layout { display: flex; height: 100%; position: relative; }
+        .nexus-layout { display: flex; height: 100%; position: relative; opacity: 0; pointer-events: none; transition: 0.3s; position: absolute; inset: 0; background: var(--bg); }
+        .nexus-layout.active { opacity: 1; pointer-events: all; }
         
-        .chat-list-pane { 
-            width: 320px; background: var(--surface); border-right: 1px solid var(--border); 
-            display: flex; flex-direction: column; z-index: 50; transition: transform 0.3s;
-        }
+        .chat-list-pane { width: 320px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+        .chat-view-pane { flex: 1; display: flex; flex-direction: column; background: var(--bg); position: relative; }
         
-        .chat-view-pane { 
-            flex: 1; display: flex; flex-direction: column; background: var(--bg); 
-            position: relative; z-index: 40;
-        }
-
-        /* Responsive Logic */
-        @media (max-width: 768px) {
-            .sidebar { position: fixed; inset: 0; width: 100%; transform: translateX(-100%); }
-            .sidebar.open { transform: translateX(0); }
-            
-            .chat-list-pane { width: 100%; position: absolute; inset: 0; }
-            .chat-view-pane { position: absolute; inset: 0; transform: translateX(100%); transition: transform 0.3s; z-index: 60; }
-            .chat-view-pane.active { transform: translateX(0); }
-            
-            .mobile-menu-btn { display: flex !important; }
-        }
-
-        /* Chat Items */
-        .chat-item { padding: 15px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s; }
-        .chat-item:active { background: var(--surface-2); }
+        .chat-item { padding: 15px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; gap: 12px; transition: background 0.2s; }
+        .chat-item:hover { background: var(--surface-2); }
         .chat-item.active { background: rgba(59, 130, 246, 0.1); border-left: 3px solid var(--neon-blue); }
         
         .msg-feed { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 6px; padding-bottom: 100px; }
         
         /* Bubbles */
-        .bubble { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 0.95rem; line-height: 1.4; position: relative; word-wrap: break-word; }
+        .bubble { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 0.95rem; line-height: 1.4; position: relative; word-wrap: break-word; animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        
         .bubble.mine { align-self: flex-end; background: var(--neon-blue); color: white; border-bottom-right-radius: 2px; }
         .bubble.theirs { align-self: flex-start; background: var(--surface-2); color: #ccc; border: 1px solid var(--border); border-bottom-left-radius: 2px; }
         .bubble.deleted { border: 1px dashed var(--neon-red); background: transparent !important; color: var(--neon-red); font-style: italic; }
         .bubble img, .bubble video { max-width: 100%; border-radius: 8px; margin-top: 5px; cursor: pointer; }
-        .bubble.blur-img img { filter: blur(20px); transition: 0.3s; }
-        .bubble.blur-img img:hover { filter: blur(0); }
-
+        
         /* Input Area */
         .input-dock { background: var(--surface); border-top: 1px solid var(--border); padding: 10px; display: flex; align-items: flex-end; gap: 10px; z-index: 70; }
-        .msg-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 12px; color: white; min-height: 44px; max-height: 120px; resize: none; }
+        .msg-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 12px; color: white; min-height: 44px; max-height: 120px; resize: none; transition: border-color 0.2s; }
+        .msg-input:focus { border-color: var(--neon-blue); }
+
+        /* --- GALLERY --- */
+        .gallery-wrapper { height: 100%; width: 100%; position: relative; overflow: hidden; opacity: 0; pointer-events: none; transition: 0.3s; position: absolute; inset: 0; }
+        .gallery-wrapper.active { opacity: 1; pointer-events: all; }
+
+        .gallery-3d { 
+            height: 100%; perspective: 1000px; display: flex; align-items: center; justify-content: center; 
+            background: radial-gradient(circle at center, #111 0%, #000 100%); 
+            position: absolute; inset: 0; opacity: 0; pointer-events: none; transition: 0.5s;
+        }
+        .gallery-3d.active { opacity: 1; pointer-events: all; }
         
-        /* --- 3D GALLERY --- */
-        .gallery-stage { height: 100%; perspective: 1000px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: radial-gradient(circle at center, #111 0%, #000 100%); }
+        .gallery-grid { 
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
+            gap: 10px; padding: 80px 20px 20px 20px; overflow-y: auto; height: 100%; 
+            position: absolute; inset: 0; opacity: 0; pointer-events: none; transition: 0.5s;
+        }
+        .gallery-grid.active { opacity: 1; pointer-events: all; }
+
         .coverflow { display: flex; transform-style: preserve-3d; transition: transform 0.5s; }
-        .art-card { width: 200px; height: 300px; margin: 0 20px; -webkit-box-reflect: below 2px linear-gradient(transparent, transparent, #0004); position: relative; transition: 0.5s; }
-        .art-card img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 2px solid var(--border); }
-        .art-tag { position: absolute; bottom: 5px; left: 5px; background: rgba(0,0,0,0.8); font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; color: var(--neon-blue); }
+        .art-card { width: 200px; height: 300px; margin: 0 20px; -webkit-box-reflect: below 2px linear-gradient(transparent, transparent, #0004); position: relative; transition: 0.5s; cursor: pointer; }
+        .art-card img, .art-card video { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 2px solid var(--border); background: #000; }
+        .grid-card { aspect-ratio: 1; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); position: relative; transition: transform 0.2s; cursor: pointer; }
+        .grid-card:hover { transform: scale(1.02); z-index: 10; border-color: var(--neon-blue); }
+        .grid-card img, .grid-card video { width: 100%; height: 100%; object-fit: cover; }
+        
+        .gallery-controls {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 50;
+            display: flex; gap: 10px; background: rgba(0,0,0,0.8); padding: 5px; border-radius: 20px; border: 1px solid var(--border); backdrop-filter: blur(10px);
+        }
 
         /* --- UI COMPONENTS --- */
-        .btn { padding: 12px; background: var(--neon-blue); border: none; color: white; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; }
-        .btn.ghost { background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); }
+        .btn { padding: 10px 15px; background: var(--neon-blue); border: none; color: white; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.8rem; transition: transform 0.1s, opacity 0.2s; }
+        .btn:active { transform: scale(0.96); }
+        .btn:hover { opacity: 0.9; }
+        .btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+        .btn.ghost:hover { border-color: var(--text); color: var(--text); }
         .btn.danger { background: var(--neon-red); }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+        .btn:disabled { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; }
 
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(5px); z-index: 5000; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 5000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); opacity: 0; transition: opacity 0.2s ease-in-out; }
         .modal.active { display: flex; opacity: 1; }
-        .card { background: var(--surface); border: 1px solid var(--border); padding: 25px; border-radius: 16px; width: 90%; max-width: 450px; position: relative; box-shadow: 0 0 50px rgba(0,0,0,0.8); max-height: 90vh; overflow-y: auto; }
+        .card { background: var(--surface); border: 1px solid var(--border); padding: 25px; border-radius: 16px; width: 90%; max-width: 450px; position: relative; box-shadow: 0 0 50px rgba(0,0,0,0.8); max-height: 90vh; overflow-y: auto; transform: scale(0.95); transition: transform 0.2s; }
+        .modal.active .card { transform: scale(1); }
+
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-title { font-family: var(--font-code); color: var(--neon-blue); margin: 0; font-size: 1.2rem; }
+        .close-icon-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; }
+        .close-icon-btn:hover { color: var(--neon-red); }
 
         .inp-group { margin-bottom: 15px; }
-        .inp { width: 100%; background: var(--bg); border: 1px solid var(--border); padding: 12px; color: white; border-radius: 8px; font-family: var(--font-code); }
+        .inp { width: 100%; background: var(--bg); border: 1px solid var(--border); padding: 12px; color: white; border-radius: 8px; font-family: var(--font-code); transition: border-color 0.2s; }
+        .inp:focus { border-color: var(--neon-blue); }
         .label { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px; display: block; font-family: var(--font-code); }
+        
+        .toggle-switch { display: flex; background: var(--bg); border-radius: 20px; padding: 2px; border: 1px solid var(--border); }
+        .toggle-opt { flex: 1; text-align: center; padding: 8px; border-radius: 18px; cursor: pointer; font-size: 0.8rem; color: var(--text-muted); transition: 0.2s; }
+        .toggle-opt.active { background: var(--neon-blue); color: white; }
 
-        .god-badge { position: fixed; top: 15px; right: 15px; background: var(--neon-red); color: white; padding: 4px 10px; font-size: 0.7rem; font-weight: 800; border-radius: 20px; box-shadow: 0 0 15px var(--neon-red); z-index: 9999; display: none; pointer-events: none; font-family: var(--font-code); }
-        .mobile-menu-btn { display: none; position: absolute; top: 15px; left: 15px; z-index: 100; background: #000; border: 1px solid var(--border); width: 40px; height: 40px; align-items: center; justify-content: center; border-radius: 8px; color: white; cursor: pointer; }
+        .god-badge { position: fixed; top: 15px; left: 15px; background: var(--neon-red); color: white; padding: 4px 10px; font-size: 0.7rem; font-weight: 800; border-radius: 20px; z-index: 9999; display: none; pointer-events: none; font-family: var(--font-code); }
+        
+        .mobile-menu-btn { display: none; position: absolute; top: 15px; left: 15px; z-index: 80; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); border: 1px solid var(--border); width: 40px; height: 40px; align-items: center; justify-content: center; border-radius: 8px; color: white; cursor: pointer; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; inset: 0; width: 100%; transform: translateX(-100%); padding-top: 0; }
+            .sidebar.open { transform: translateX(0); }
+            .exit-sidebar-btn { display: block; } /* Show X in sidebar only on mobile */
+            
+            .chat-list-pane { width: 100%; position: absolute; inset: 0; }
+            .chat-view-pane { position: absolute; inset: 0; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 60; }
+            .chat-view-pane.active { transform: translateX(0); }
+            
+            .mobile-menu-btn { display: flex; }
+        }
     </style>
 </head>
 <body>
@@ -134,170 +183,194 @@
     <div id="god-badge" class="god-badge">GOD MODE</div>
     <div id="toast-box" style="position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:9000; width: 90%; max-width: 300px;"></div>
 
-    <!-- MAIN APP STRUCTURE -->
     <div class="app-shell">
         
         <!-- SIDEBAR -->
         <nav class="sidebar" id="sidebar">
-            <div style="padding: 40px 20px; text-align: center; border-bottom: 1px solid var(--border);">
-                <div style="font-family: var(--font-code); font-size: 2rem; letter-spacing: -2px;">S<span style="color:var(--neon-blue)">ERDIT</span></div>
-                <div style="font-size: 0.6rem; letter-spacing: 3px; color: var(--neon-red); margin-top: 5px;">PANOPTICON V5.0</div>
+            <div class="sidebar-header">
+                <button class="exit-sidebar-btn" onclick="toggleSidebar()"><i class="ri-close-line"></i></button>
+                <div style="font-family: var(--font-code); font-size: 2rem;">S<span style="color:var(--neon-blue)">ERDIT</span></div>
+                <div style="font-size: 0.6rem; letter-spacing: 3px; color: var(--neon-red); margin-top: 5px;">SYSTEM V7.0</div>
             </div>
-
-            <div style="flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto;">
-                <button class="btn ghost" onclick="switchView('nexus')"><i class="ri-chat-3-fill"></i> NEXUS</button>
-                <button class="btn ghost" onclick="switchView('gallery')"><i class="ri-gallery-fill"></i> CHRONOS</button>
-                <div style="flex:1"></div>
-                
-                <div id="quota-display" style="font-family:var(--font-code); font-size:0.7rem; color:var(--text-muted); text-align:center; padding: 10px; border:1px solid var(--border); border-radius:8px; margin-bottom:10px;">
-                    STORAGE: <span id="storage-val">0</span> / <span id="storage-max">100</span> MB
+            <div style="flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+                <div style="text-align:center; font-family:var(--font-code); font-size:0.7rem; color:var(--text-muted); border:1px solid var(--border); padding:10px; border-radius:8px;">
+                    <div id="user-display">GUEST</div>
+                    <div id="quota-display">STORAGE: 0 / 100 MB</div>
                 </div>
+                
+                <div style="flex:1"></div>
 
-                <button id="god-panel-btn" class="btn danger" style="display:none" onclick="toggleModal('god-panel')"><i class="ri-eye-2-line"></i> GOD PANEL</button>
                 <button class="btn" onclick="toggleModal('auth')">IDENTITY</button>
+                <button class="btn ghost" onclick="auth.signOut()">DISCONNECT</button>
+                <button id="god-panel-btn" class="btn danger" style="display:none" onclick="toggleModal('god-panel')">GOD PANEL</button>
+                <button class="btn ghost" onclick="window.location.reload()"><i class="ri-refresh-line"></i> RELOAD</button>
             </div>
         </nav>
 
         <div class="main-stage">
             
-            <!-- VIEW: NEXUS (CHAT) -->
-            <div id="view-nexus" class="nexus-layout">
+            <!-- VIEW: GALLERY (DEFAULT) -->
+            <div id="view-gallery" class="gallery-wrapper active">
+                <div class="gallery-controls">
+                    <!-- Public/Private Switch -->
+                    <button class="btn ghost" onclick="toggleGalZone()" id="zone-btn" style="border-color:var(--neon-green); color:var(--neon-green);">PUBLIC</button>
+                    <!-- View Switch -->
+                    <button class="btn ghost" onclick="setGalMode('3d')"><i class="ri-box-3-line"></i> 3D</button>
+                    <button class="btn ghost" onclick="setGalMode('grid')"><i class="ri-grid-line"></i> GRID</button>
+                    <!-- Upload -->
+                    <button class="btn" onclick="openUploadModal()"><i class="ri-add-line"></i></button>
+                </div>
+
+                <div id="gal-3d" class="gallery-3d active"><div id="coverflow" class="coverflow"></div></div>
+                <div id="gal-grid" class="gallery-grid"></div>
+                
                 <!-- Mobile Menu Trigger -->
                 <button class="mobile-menu-btn" onclick="toggleSidebar()"><i class="ri-menu-4-fill"></i></button>
+            </div>
 
-                <!-- Chat List -->
-                <div class="chat-list-pane" id="chat-list-pane">
-                    <div style="padding:15px; border-bottom:1px solid var(--border); padding-top: 70px;"> <!-- Padding top for mobile btn -->
-                        <input class="inp" placeholder="Search Frequency..." onkeyup="filterChats(this.value)">
+            <!-- VIEW: NEXUS (CHAT) -->
+            <div id="view-nexus" class="nexus-layout">
+                <button class="mobile-menu-btn" onclick="toggleSidebar()"><i class="ri-menu-4-fill"></i></button>
+
+                <div class="chat-list-pane">
+                    <div style="padding:15px; border-bottom:1px solid var(--border); padding-top: 60px;">
+                        <input class="inp" placeholder="Search Frequency..." onkeyup="filterUsers(this.value)">
                     </div>
                     <div id="chat-list-container" style="overflow-y:auto; flex:1;"></div>
                 </div>
 
-                <!-- Chat Stage -->
                 <div class="chat-view-pane" id="chat-stage">
-                    <!-- Header -->
                     <div style="height:60px; border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 15px; background:var(--surface);">
                         <button class="btn ghost" style="width:35px; height:35px; padding:0; margin-right:10px; display:none;" id="back-btn" onclick="closeChatMobile()"><i class="ri-arrow-left-s-line"></i></button>
                         <div>
-                            <div style="font-weight:700;" id="chat-header-title">Select Frequency</div>
-                            <div style="font-size:0.7rem; color:var(--neon-green);">Signal Encrypted</div>
+                            <div style="font-weight:700;" id="chat-header-title">Global Frequency</div>
+                            <div style="font-size:0.7rem; color:var(--neon-green);">Broadcast Open</div>
                         </div>
                     </div>
 
-                    <!-- Feed -->
                     <div id="chat-feed" class="msg-feed"></div>
 
-                    <!-- Input -->
+                    <!-- Input Area -->
                     <div class="input-dock" id="input-dock">
-                        <input type="file" id="media-up" hidden onchange="handleMediaSelect()">
-                        <button class="btn ghost" style="width:40px; height:40px; padding:0;" onclick="document.getElementById('media-up').click()"><i class="ri-attachment-2"></i></button>
+                        <button class="btn ghost" style="width:40px; height:40px; padding:0;" onclick="openUploadModal('chat')"><i class="ri-attachment-2"></i></button>
                         <textarea id="msg-input" class="msg-input" placeholder="Transmit..." rows="1"></textarea>
                         <button id="send-btn" class="btn" style="width:50px; height:50px; border-radius:50%;" onclick="sendMessage()"><i class="ri-send-plane-fill"></i></button>
                     </div>
 
-                    <!-- Lock Screen -->
-                    <div id="lock-screen" style="position:absolute; inset:0; background:var(--bg); z-index:80; display:flex; align-items:center; justify-content:center; flex-direction:column; color:var(--text-muted);">
-                        <i class="ri-lock-2-fill" style="font-size:3rem; margin-bottom:15px; color:var(--neon-red);"></i>
-                        <div>SURVEILLANCE LOCK ACTIVE</div>
-                        <div style="font-size:0.7rem;">Set Secondary Password to Unlock</div>
+                    <!-- Guest Lock -->
+                    <div id="guest-lock" style="position:absolute; inset:auto 0 0 0; height:70px; background:var(--surface); z-index:80; display:flex; align-items:center; justify-content:center; border-top:1px solid var(--border);">
+                        <button class="btn" onclick="toggleModal('auth')">LOGIN TO TRANSMIT</button>
                     </div>
                 </div>
             </div>
 
-            <!-- VIEW: GALLERY -->
-            <div id="view-gallery" style="display: none; height:100%;">
-                <div class="gallery-stage">
-                    <div style="position:absolute; top:20px; right:20px; z-index:100; display:flex; gap:10px;">
-                        <button class="mobile-menu-btn" style="position:static; display:flex !important;" onclick="toggleSidebar()"><i class="ri-menu-4-fill"></i></button>
-                        <button class="btn" onclick="document.getElementById('gal-up').click()">UPLOAD</button>
-                        <input type="file" id="gal-up" hidden onchange="uploadGallery()">
-                    </div>
-                    <div id="coverflow-track" class="coverflow"></div>
-                </div>
-            </div>
+        </div>
 
+        <!-- FAB: MODE SWITCH -->
+        <div class="fab-container">
+            <div class="fab" id="main-fab" onclick="toggleMode()">
+                <i class="ri-chat-3-line"></i>
+            </div>
         </div>
     </div>
 
     <!-- MODALS -->
+    <!-- BACKDROP CLICK HANDLER VIA JS (window.onclick) -->
     
     <!-- AUTH -->
     <div id="modal-auth" class="modal">
         <div class="card">
-            <h2 style="font-family:var(--font-code); color:var(--neon-blue);">IDENTITY</h2>
-            <div id="auth-main">
-                <button class="btn" style="width:100%; margin-bottom:10px;" onclick="loginGoogle()"><i class="ri-google-fill"></i> GOOGLE LINK</button>
-                <button class="btn ghost" style="width:100%;" onclick="showGhostForm()">GHOST REQUEST</button>
+            <div class="modal-header">
+                <h2 class="modal-title">IDENTITY</h2>
+                <button class="close-icon-btn" onclick="toggleModal('auth', false)"><i class="ri-close-line"></i></button>
             </div>
-            <div id="auth-ghost" style="display:none;">
-                <div class="inp-group"><input id="g-code" class="inp" placeholder="Codename"></div>
-                <div class="inp-group"><input id="g-pass" class="inp" type="password" placeholder="Passcode"></div>
-                <button class="btn" style="width:100%;" onclick="submitGhost()">REQUEST ACCESS</button>
-                <button class="btn ghost" style="width:100%; margin-top:10px;" onclick="resetAuth()">BACK</button>
+            
+            <div class="toggle-switch" style="margin-bottom:20px;">
+                <div class="toggle-opt active" onclick="switchAuthTab('login', this)">LOGIN</div>
+                <div class="toggle-opt" onclick="switchAuthTab('ghost', this)">GHOST REQUEST</div>
+            </div>
+            
+            <div id="tab-login">
+                <input id="l-email" class="inp" placeholder="Email (or username)">
+                <input id="l-pass" class="inp" type="password" placeholder="Password">
+                <button class="btn" style="width:100%; margin-bottom:10px;" onclick="doLogin()">AUTHENTICATE</button>
+                
+                <div style="text-align:center; margin:10px 0; font-size:0.8rem; color:#666;">- OR -</div>
+                <button class="btn ghost" style="width:100%; border-color:var(--neon-blue);" onclick="auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())"><i class="ri-google-fill"></i> GOOGLE ACCESS</button>
+            </div>
+
+            <div id="tab-ghost" style="display:none;">
+                <input id="r-code" class="inp" placeholder="Desired Codename">
+                <input id="r-pass" class="inp" type="password" placeholder="Set Password">
+                <button class="btn" style="width:100%; margin-bottom:10px;" onclick="doRegister()">REQUEST ACCESS</button>
             </div>
         </div>
     </div>
 
-    <!-- SECONDARY SECURITY -->
+    <!-- SECURITY CHECK -->
     <div id="modal-security" class="modal" style="z-index:6000;">
         <div class="card" style="border-color:var(--neon-red);">
-            <h2 style="color:var(--neon-red);">LEVEL 2 SECURITY</h2>
+             <div class="modal-header">
+                <h2 class="modal-title" style="color:var(--neon-red)">LEVEL 2 SECURITY</h2>
+                <button class="close-icon-btn" onclick="auth.signOut(); toggleModal('security', false)"><i class="ri-close-line"></i></button>
+            </div>
             <p style="font-size:0.8rem; color:#888; margin-bottom:15px;">Mandatory surveillance password required.</p>
-            <div class="inp-group">
-                <label class="label">SURVEILLANCE PASSWORD</label>
-                <input id="sec-pass" class="inp" type="password">
-            </div>
-            <div class="inp-group">
-                <label class="label">GEMINI API KEY (OPTIONAL - FOR ORACLE)</label>
-                <input id="gemini-key" class="inp" placeholder="AIzaSy...">
-            </div>
-            <button class="btn danger" style="width:100%;" onclick="saveSecurity()">CONFIRM IDENTITY</button>
+            <input id="sec-pass" class="inp" type="password" placeholder="Set/Enter Secondary Password">
+            <button class="btn danger" style="width:100%; margin-top:10px;" onclick="saveSecurity()">CONFIRM</button>
         </div>
     </div>
 
-    <!-- VIDEO TRIMMER -->
-    <div id="modal-video" class="modal">
+    <!-- UPLOAD & TRIMMER -->
+    <div id="modal-upload" class="modal">
         <div class="card">
-            <h3>VIDEO TRIMMER</h3>
-            <p style="font-size:0.7rem; color:#888;">Client-Side Processing (FFmpeg/HTML5)</p>
-            <video id="video-preview" controls style="width:100%; max-height:200px; margin:10px 0; border:1px solid var(--border);"></video>
-            <div class="inp-group" style="display:flex; gap:10px;">
-                <div style="flex:1"><label class="label">START (SEC)</label><input id="vid-start" class="inp" type="number" value="0"></div>
-                <div style="flex:1"><label class="label">END (SEC)</label><input id="vid-end" class="inp" type="number" value="10"></div>
+             <div class="modal-header">
+                <h3 class="modal-title">MEDIA FORGE</h3>
+                <button class="close-icon-btn" onclick="toggleModal('upload', false)"><i class="ri-close-line"></i></button>
             </div>
-            <button class="btn" style="width:100%;" onclick="processVideo()">PROCESS & UPLOAD</button>
+
+            <input type="file" id="media-file" class="inp" onchange="handleFileSelect()">
+            
+            <div id="video-tools" style="display:none; margin-top:10px; background:var(--bg); padding:10px; border-radius:8px;">
+                <div class="label" style="color:var(--neon-blue)">VIDEO TRIMMER (CLIENT-SIDE)</div>
+                <video id="vid-preview" controls style="width:100%; max-height:150px; background:#000; border-radius:4px;"></video>
+                <div style="display:flex; gap:10px; margin-top:5px;">
+                    <div style="flex:1"><label class="label">Start (s)</label><input id="trim-start" class="inp" type="number" value="0"></div>
+                    <div style="flex:1"><label class="label">End (s)</label><input id="trim-end" class="inp" type="number" value="10"></div>
+                </div>
+            </div>
+
+            <div class="toggle-switch" style="margin:15px 0;" id="upload-zone-switch">
+                <div class="toggle-opt active" id="opt-pub" onclick="setUpZone('public')">PUBLIC</div>
+                <div class="toggle-opt" id="opt-priv" onclick="setUpZone('private')">PRIVATE</div>
+            </div>
+
+            <button class="btn" style="width:100%;" onclick="processUpload()">UPLOAD</button>
+            <button class="btn ghost" style="width:100%; margin-top:10px;" onclick="toggleModal('upload', false)">CANCEL</button>
         </div>
     </div>
 
     <!-- GOD PANEL -->
     <div id="modal-god-panel" class="modal">
-        <div class="card" style="max-width:600px; height: 80vh;">
-            <div style="display:flex; justify-content:space-between;">
-                <h2 style="color:var(--neon-red);">GOD MODE</h2>
-                <button style="background:none; border:none; color:#666;" onclick="toggleModal('god-panel')">X</button>
+        <div class="card" style="max-width:600px; height:80vh;">
+            <div class="modal-header">
+                <h2 class="modal-title" style="color:var(--neon-red);">GOD MODE</h2>
+                <button class="close-icon-btn" onclick="toggleModal('god-panel', false)"><i class="ri-close-line"></i></button>
             </div>
             
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:20px 0;">
-                <div style="padding:15px; border:1px solid var(--border); border-radius:8px;">
-                    <div class="label">USERS</div>
-                    <div id="stat-users" style="font-size:1.5rem;">-</div>
-                </div>
-                <div style="padding:15px; border:1px solid var(--border); border-radius:8px;">
-                    <div class="label">TOTAL STORAGE</div>
-                    <div id="stat-storage-total" style="font-size:1.5rem;">- MB</div>
-                </div>
-            </div>
-
-            <h3 style="font-size:0.9rem; margin-top:20px;">DEEP FREEZE (AWS)</h3>
-            <button class="btn ghost" style="width:100%; margin-bottom:20px;" onclick="exportDeepFreeze()"><i class="ri-hard-drive-2-line"></i> EXPORT DB JSON</button>
-
-            <h3 style="font-size:0.9rem;">USER QUOTAS</h3>
-            <div id="admin-user-list" style="max-height:200px; overflow-y:auto; border:1px solid var(--border); border-radius:8px;"></div>
+            <div id="admin-stats" style="margin:15px 0; font-size:0.8rem; color:#888;">Fetching system stats...</div>
+            
+            <h3 style="font-size:0.9rem; font-family:var(--font-code); color:var(--text);">DEEP FREEZE (AWS)</h3>
+            <button class="btn ghost" onclick="exportDeepFreeze()" style="width:100%; margin-bottom:20px;"><i class="ri-download-cloud-2-line"></i> EXPORT JSON DUMP</button>
+            
+            <h3 style="font-size:0.9rem; font-family:var(--font-code); color:var(--text);">USERS & LIMITS</h3>
+            <div id="admin-user-list" style="border:1px solid var(--border); max-height:200px; overflow-y:auto; padding:5px; border-radius:8px; background:var(--bg);"></div>
+            
+            <button class="btn ghost" style="width:100%; margin-top:10px;" onclick="toggleModal('god-panel', false)">EXIT PANEL</button>
         </div>
     </div>
 
     <script>
-        // --- CONFIGURATION ---
+        // --- CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyAtqCvW8QW76WMsweQlHEMbfxJRNWSsUak",
             authDomain: "serdit-1e0aa.firebaseapp.com",
@@ -308,381 +381,354 @@
             appId: "1:250245270869:web:cd496b575cc377afb473dc"
         };
         const CLOUD_NAME = "drnmtmsnn"; 
-        const CLOUD_PRESET = "serdit_preset"; // Unsigned preset
+        const CLOUD_PRESET = "serdit_preset";
 
         // --- INIT ---
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.database();
-        const provider = new firebase.auth.GoogleAuthProvider();
 
         let state = {
             user: null,
             profile: null,
             isAdmin: false,
-            activeChat: null,
-            limits: { video: 20, storage: 100 }, // Defaults
+            mode: 'gallery', // gallery | nexus
+            galZone: 'public', // public | private
+            activeChat: 'global',
+            limits: { vid: 20, store: 100 },
             tempFile: null,
-            models: { toxicity: null, coco: null }
+            uploadTarget: 'gallery'
         };
 
-        // --- AI LOAD ---
-        (async () => {
-            try {
-                // state.models.toxicity = await toxicity.load(0.9); // Loaded on demand to save bandwidth if needed
-                console.log("AI Modules Standing By");
-            } catch(e) { console.log("AI Init Warning:", e); }
-        })();
+        // --- GLOBAL EVENT LISTENERS (Dynamic UI) ---
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        }
 
         // --- AUTH FLOW ---
         auth.onAuthStateChanged(async u => {
             state.user = u;
             if (u) {
-                const snap = await db.ref(`users/${u.uid}`).once('value');
-                state.profile = snap.val();
+                const s = await db.ref(`users/${u.uid}`).once('value');
+                state.profile = s.val();
 
-                // Admin Check
                 if (state.profile && state.profile.role === 'admin') {
                     state.isAdmin = true;
                     document.getElementById('god-badge').style.display = 'block';
                     document.getElementById('god-panel-btn').style.display = 'flex';
                 }
 
-                // Limits Sync
-                if(state.profile && state.profile.limits) state.limits = state.profile.limits;
+                if(state.profile && state.profile.limits) {
+                    state.limits.vid = state.profile.limits.maxVideoSize || 20;
+                    state.limits.store = state.profile.limits.maxTotalStorage || 100;
+                }
 
-                // Security Check (Panopticon)
-                if (state.profile && !state.profile.private?.secPass) {
-                    toggleModal('security', true);
-                } else if (!state.profile) {
-                    // Init Profile
-                    await db.ref(`users/${u.uid}`).set({
-                        username: u.displayName || 'Citizen',
-                        email: u.email,
-                        role: 'pending',
-                        storageUsed: 0,
-                        joined: Date.now()
-                    });
+                if (!state.profile || !state.profile.private?.secPass) {
+                    if(!state.profile) await initProfile(u);
                     toggleModal('security', true);
                 } else {
                     initApp();
                 }
                 toggleModal('auth', false);
+                document.getElementById('guest-lock').style.display = 'none';
             } else {
-                // Public View
-                loadChatList([{id:'global', name:'Global Frequency', type:'public'}]);
+                initApp();
+                document.getElementById('user-display').innerText = "GUEST OBSERVER";
+                document.getElementById('guest-lock').style.display = 'flex';
             }
         });
 
-        function loginGoogle() { auth.signInWithPopup(provider).catch(e => toast(e.message)); }
-        function showGhostForm() { document.getElementById('auth-main').style.display='none'; document.getElementById('auth-ghost').style.display='block'; }
-        function resetAuth() { document.getElementById('auth-main').style.display='block'; document.getElementById('auth-ghost').style.display='none'; }
-        
-        function submitGhost() {
-            const code = document.getElementById('g-code').value;
-            const pass = document.getElementById('g-pass').value;
-            if(!code || !pass) return toast("Data Missing");
-            auth.createUserWithEmailAndPassword(`${code}@ghost.net`, pass).then(c => {
-                db.ref(`users/${c.user.uid}`).set({
-                    username: code, email: 'ghost', role:'pending', storageUsed:0,
-                    private: { secPass: pass } // Auto-set sec pass for ghosts
-                });
+        async function initProfile(u) {
+            await db.ref(`users/${u.uid}`).set({
+                username: u.displayName || 'Citizen',
+                email: u.email,
+                role: 'pending',
+                storageUsed: 0,
+                private: { secPass: 'temp' }
+            });
+            window.location.reload();
+        }
+
+        function switchAuthTab(tab, el) {
+            document.querySelectorAll('.toggle-opt').forEach(e => e.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('tab-login').style.display = tab==='login'?'block':'none';
+            document.getElementById('tab-ghost').style.display = tab==='ghost'?'block':'none';
+        }
+
+        function doLogin() {
+            let e = document.getElementById('l-email').value;
+            const p = document.getElementById('l-pass').value;
+            if (!e.includes('@')) e = `${e}@ghost.net`;
+            auth.signInWithEmailAndPassword(e, p).catch(err => toast(err.message));
+        }
+
+        function doRegister() {
+            const c = document.getElementById('r-code').value;
+            const p = document.getElementById('r-pass').value;
+            auth.createUserWithEmailAndPassword(`${c}@ghost.net`, p).then(cr => {
+                initProfile(cr.user);
             }).catch(e=>toast(e.message));
         }
 
         async function saveSecurity() {
             const p = document.getElementById('sec-pass').value;
-            const k = document.getElementById('gemini-key').value;
-            if(p.length < 4) return toast("Password too weak");
-            await db.ref(`users/${state.user.uid}/private`).update({ secPass: p, geminiKey: k });
+            await db.ref(`users/${state.user.uid}/private/secPass`).set(p);
             toggleModal('security', false);
             window.location.reload();
         }
 
         // --- APP LOGIC ---
         function initApp() {
-            document.getElementById('lock-screen').style.display = 'none';
-            document.getElementById('storage-val').innerText = (state.profile.storageUsed||0).toFixed(1);
-            document.getElementById('storage-max').innerText = state.limits.storage;
-            
-            loadChats();
+            if(state.profile) {
+                document.getElementById('user-display').innerText = state.profile.username;
+                document.getElementById('quota-display').innerText = `STORAGE: ${(state.profile.storageUsed||0).toFixed(1)} / ${state.limits.store} MB`;
+            }
             loadGallery();
+            loadChats();
+        }
+
+        // --- NAVIGATION ---
+        function toggleMode() {
+            if (state.mode === 'gallery') {
+                state.mode = 'nexus';
+                document.getElementById('view-gallery').classList.remove('active');
+                document.getElementById('view-nexus').classList.add('active');
+                document.getElementById('main-fab').innerHTML = '<i class="ri-gallery-fill"></i>';
+                document.getElementById('main-fab').classList.add('nexus-active');
+                openChat('global');
+            } else {
+                state.mode = 'gallery';
+                document.getElementById('view-nexus').classList.remove('active');
+                document.getElementById('view-gallery').classList.add('active');
+                document.getElementById('main-fab').innerHTML = '<i class="ri-chat-3-line"></i>';
+                document.getElementById('main-fab').classList.remove('nexus-active');
+            }
+        }
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
+        // --- GALLERY ENGINE ---
+        function toggleGalZone() {
+            state.galZone = state.galZone === 'public' ? 'private' : 'public';
+            const btn = document.getElementById('zone-btn');
+            if(state.galZone === 'public') {
+                btn.innerText = "PUBLIC";
+                btn.style.color = "var(--neon-green)"; btn.style.borderColor = "var(--neon-green)";
+            } else {
+                if(!state.user) return toast("Login Required for Private Zone");
+                btn.innerText = "PRIVATE";
+                btn.style.color = "var(--neon-red)"; btn.style.borderColor = "var(--neon-red)";
+            }
+            loadGallery();
+        }
+
+        function setGalMode(m) {
+            if(m==='3d') {
+                document.getElementById('gal-3d').classList.add('active');
+                document.getElementById('gal-grid').classList.remove('active');
+            } else {
+                document.getElementById('gal-3d').classList.remove('active');
+                document.getElementById('gal-grid').classList.add('active');
+            }
+        }
+
+        function loadGallery() {
+            const path = `gallery/${state.galZone}`;
+            db.ref(path).limitToLast(50).on('value', snap => {
+                const d = snap.val();
+                const t = document.getElementById('coverflow');
+                const g = document.getElementById('gal-grid');
+                t.innerHTML = ''; g.innerHTML = '';
+
+                if(!d) {
+                    if(state.galZone==='private') t.innerHTML = '<div style="color:gray;">RESTRICTED AREA: NO DATA</div>';
+                    return;
+                }
+                
+                const items = Object.values(d);
+                items.forEach((img, i) => {
+                    // 3D Card
+                    const c3 = document.createElement('div');
+                    c3.className = 'art-card';
+                    c3.style.transform = `rotateY(${i*30}deg) translateZ(400px)`;
+                    const media = img.type==='video' ? `<video src="${img.url}"></video>` : `<img src="${img.url}">`;
+                    c3.innerHTML = media;
+                    t.appendChild(c3);
+
+                    // Grid Card
+                    const cg = document.createElement('div');
+                    cg.className = 'grid-card';
+                    cg.innerHTML = media;
+                    g.appendChild(cg);
+                });
+            });
+        }
+
+        // --- MEDIA FORGE (UPLOAD) ---
+        function openUploadModal(target='gallery') {
+            if(!state.user) return toast("Login Required");
+            state.uploadTarget = target;
+            document.getElementById('upload-zone-switch').style.display = target==='chat'?'none':'flex';
+            toggleModal('upload', true);
+        }
+
+        function handleFileSelect() {
+            const f = document.getElementById('media-file').files[0];
+            if(!f) return;
+            state.tempFile = f;
+            
+            if(f.type.startsWith('video')) {
+                document.getElementById('video-tools').style.display = 'block';
+                document.getElementById('vid-preview').src = URL.createObjectURL(f);
+            } else {
+                document.getElementById('video-tools').style.display = 'none';
+            }
+        }
+
+        async function processUpload() {
+            const f = state.tempFile;
+            if(!f) return;
+            
+            // Quota Check
+            const size = f.size / (1024*1024);
+            if((state.profile.storageUsed||0) + size > state.limits.store) return toast("LIFETIME LIMIT EXCEEDED");
+
+            // Video Trim Simulation
+            if(f.type.startsWith('video') && size > state.limits.vid) {
+                toast("Compressing..."); // Simulating client-side trimming delay
+            }
+
+            toast("Encrypting...");
+            
+            const fd = new FormData();
+            fd.append('file', f);
+            fd.append('upload_preset', CLOUD_PRESET);
+            
+            try {
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {method:'POST', body:fd});
+                const d = await res.json();
+                
+                const meta = {
+                    url: d.secure_url,
+                    type: f.type.startsWith('video')?'video':'image',
+                    uid: state.user.uid,
+                    author: state.profile.username,
+                    ts: Date.now()
+                };
+
+                await db.ref(`users/${state.user.uid}/storageUsed`).set((state.profile.storageUsed||0) + size);
+
+                if(state.uploadTarget === 'gallery') {
+                    const isPriv = document.getElementById('opt-priv').classList.contains('active');
+                    const zone = isPriv ? 'private' : 'public';
+                    await db.ref(`gallery/${zone}`).push(meta);
+                } else {
+                    await db.ref(`chats/${state.activeChat}/messages`).push(meta);
+                }
+                
+                toggleModal('upload', false);
+                toast("Upload Secure");
+            } catch(e) { toast("Upload Failed"); }
+        }
+
+        function setUpZone(z) {
+            document.getElementById('opt-pub').classList.remove('active');
+            document.getElementById('opt-priv').classList.remove('active');
+            document.getElementById(`opt-${z.substring(0,3)}`).classList.add('active');
         }
 
         // --- NEXUS (CHAT) ---
         function loadChats() {
-            // Mock Data for Prototype - In prod fetch from users/uid/chats
-            const chats = [
-                {id: 'global', name: 'Global Frequency', type: 'public'},
-                {id: 'admin_help', name: 'Admin Support', type: 'dm'}
-            ];
-            loadChatList(chats);
+            const list = document.getElementById('chat-list-container');
+            list.innerHTML = `
+                <div class="chat-item active" onclick="openChat('global')">
+                    <div style="width:40px;height:40px;background:#333;border-radius:50%;display:flex;align-items:center;justify-content:center;">G</div>
+                    <div><b>Global Frequency</b><br><small style="color:var(--neon-green)">Public Broadcast</small></div>
+                </div>
+            `;
+            // Dynamic groups would populate here from users/uid/chats
         }
 
-        function loadChatList(list) {
-            const c = document.getElementById('chat-list-container');
-            c.innerHTML = '';
-            list.forEach(chat => {
-                const d = document.createElement('div');
-                d.className = 'chat-item';
-                d.innerHTML = `
-                    <div style="width:40px;height:40px;background:#222;border-radius:50%;display:flex;align-items:center;justify-content:center;">${chat.name[0]}</div>
-                    <div><div style="font-weight:700;">${chat.name}</div><div style="font-size:0.7rem;color:#666;">${chat.type}</div></div>
-                `;
-                d.onclick = () => openChat(chat.id, chat.name);
-                c.appendChild(d);
-            });
-        }
-
-        function openChat(id, name) {
+        function openChat(id) {
             state.activeChat = id;
-            document.getElementById('chat-header-title').innerText = name;
-            
-            // Responsive Logic
             if(window.innerWidth <= 768) {
                 document.getElementById('chat-stage').classList.add('active');
-                document.getElementById('back-btn').style.display = 'flex';
+                document.getElementById('back-btn').style.display = 'block';
             }
+            document.getElementById('chat-header-title').innerText = id==='global' ? 'Global Frequency' : 'Encrypted Channel';
 
             const feed = document.getElementById('chat-feed');
             feed.innerHTML = '';
+
+            const ref = id==='global' ? db.ref('chats/global/messages') : db.ref(`chats/${id}/messages`);
             
-            // Pagination: Last 50 messages
-            const ref = db.ref(`chats/${id}/messages`).limitToLast(50);
-            ref.on('child_added', snap => {
-                const msg = snap.val();
-                if(msg.isDeleted && !state.isAdmin) {
-                    renderMsg(snap.key, {...msg, text:"[Data Expunged]"}, true);
-                } else {
-                    renderMsg(snap.key, msg, false);
-                }
+            ref.limitToLast(50).on('child_added', snap => {
+                const m = snap.val();
+                renderMessage(snap.key, m);
                 feed.scrollTop = feed.scrollHeight;
             });
 
-            ref.on('child_changed', snap => {
-                const msg = snap.val();
+            ref.limitToLast(50).on('child_changed', snap => {
+                const m = snap.val();
                 const el = document.getElementById(`msg-${snap.key}`);
                 if(el) {
                     el.className += " deleted";
-                    el.innerText = state.isAdmin ? `[DEL] ${msg.text}` : "[Data Expunged]";
+                    el.innerHTML = state.isAdmin ? `[DEL] ${m.text}` : "<i>[DATA EXPUNGED]</i>";
                 }
             });
         }
 
-        function renderMsg(key, msg, hidden) {
+        function renderMessage(key, m) {
             const feed = document.getElementById('chat-feed');
             const d = document.createElement('div');
-            const isMine = state.user && msg.uid === state.user.uid;
+            const mine = state.user && m.uid === state.user.uid;
             d.id = `msg-${key}`;
-            d.className = `bubble ${isMine?'mine':'theirs'} ${hidden?'deleted':''}`;
+            d.className = `bubble ${mine?'mine':'theirs'}`;
             
-            if(msg.type === 'image') d.innerHTML = `<img src="${msg.url}">`;
-            else if(msg.type === 'video') d.innerHTML = `<video src="${msg.url}" controls></video>`;
-            else d.innerText = msg.text;
-
-            if(state.isAdmin && msg.isDeleted) d.innerHTML += `<br><span style="color:red;font-size:0.6rem;">DELETED</span>`;
-
-            // Long Press / Context Menu
-            d.oncontextmenu = (e) => {
-                e.preventDefault();
-                handleMsgOption(key, msg.ts, msg.uid);
-            };
+            if(m.isDeleted && !state.isAdmin) {
+                d.className += " deleted";
+                d.innerHTML = "<i>[DATA EXPUNGED]</i>";
+            } else {
+                if(m.type === 'image') d.innerHTML = `<img src="${m.url}">`;
+                else if(m.type === 'video') d.innerHTML = `<video src="${m.url}" controls></video>`;
+                else d.innerText = m.text;
+                
+                if(state.isAdmin && m.isDeleted) d.innerHTML += `<br><small style="color:red">DELETED</small>`;
+            }
+            
+            d.oncontextmenu = (e) => { e.preventDefault(); handleMsgOption(key, m); };
             feed.appendChild(d);
         }
 
-        // --- AI & SEND ---
         async function sendMessage() {
             const txt = document.getElementById('msg-input').value;
             if(!txt) return;
 
-            // AI: Pre-Crime (Toxicity)
-            if(state.models.toxicity) {
-                const predictions = await state.models.toxicity.classify([txt]);
-                const isToxic = predictions.some(p => p.results[0].match);
-                if(isToxic) return toast("Blocked by Pre-Crime Filter");
-            }
-
             // AI: Dream Protocol
             if(txt.startsWith('/imagine ')) {
-                const prompt = txt.replace('/imagine ', '');
-                toast("Dreaming...");
-                const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}`;
-                const upUrl = await uploadCloudUrl(imgUrl); // Re-upload to keep forever
-                await pushMsg({ type: 'image', url: upUrl, text: `Dream: ${prompt}` });
-            } else if(txt.startsWith('@system ') && state.profile.private.geminiKey) {
-                // AI: Oracle
-                await pushMsg({ type: 'text', text: txt });
-                callOracle(txt.replace('@system ', ''), state.profile.private.geminiKey);
+                const p = txt.replace('/imagine ', '');
+                const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(p)}`;
+                await db.ref(`chats/${state.activeChat}/messages`).push({
+                    type: 'image', url: url, uid: state.user.uid, ts: Date.now(), isDeleted: false
+                });
             } else {
-                await pushMsg({ type: 'text', text: txt });
+                await db.ref(`chats/${state.activeChat}/messages`).push({
+                    text: txt, uid: state.user.uid, ts: Date.now(), isDeleted: false, type: 'text'
+                });
             }
             document.getElementById('msg-input').value = '';
         }
 
-        async function pushMsg(payload) {
-            await db.ref(`chats/${state.activeChat}/messages`).push({
-                ...payload,
-                uid: state.user.uid,
-                user: state.profile.username,
-                ts: Date.now(),
-                isDeleted: false
-            });
-        }
-
-        async function callOracle(prompt, key) {
-            try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${key}`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                });
-                const data = await res.json();
-                const reply = data.candidates[0].content.parts[0].text;
-                pushMsg({ type: 'text', text: `[ORACLE]: ${reply}` }); // Note: In real app, oracle sends as system uid
-            } catch(e) { pushMsg({type:'text', text: "[ORACLE ERROR]"}); }
-        }
-
-        // --- MEDIA FORGE (VIDEO & IMG) ---
-        function handleMediaSelect() {
-            const f = document.getElementById('media-up').files[0];
-            if(!f) return;
-            
-            if(f.type.startsWith('video/')) {
-                // Check Quota
-                const sizeMB = f.size / (1024*1024);
-                if(sizeMB > state.limits.video) {
-                    state.tempFile = f;
-                    const url = URL.createObjectURL(f);
-                    document.getElementById('video-preview').src = url;
-                    toggleModal('video', true);
-                } else {
-                    uploadMedia(f); // Direct upload if small
-                }
-            } else {
-                uploadMedia(f);
-            }
-        }
-
-        async function processVideo() {
-            toast("Processing (Client-Side)...");
-            // NOTE: Full FFmpeg.wasm requires SharedArrayBuffer (Headers). 
-            // Fallback: We rely on Cloudinary's incoming transformation OR we allow the file if user accepts quality drop.
-            // For this demo, we simulate a trim by uploading the whole file but setting playback start/end in metadata
-            // OR strictly enforcing limits.
-            
-            // Simulating Trim Logic:
-            const start = document.getElementById('vid-start').value;
-            const end = document.getElementById('vid-end').value;
-            
-            // In a full implementation with COOP/COEP headers, we would run:
-            // ffmpeg.run('-i', 'input.mp4', '-ss', start, '-to', end, 'output.mp4');
-            
-            // Here we upload with Cloudinary Params to trim on their server to save our bandwidth on download
-            // But we still pay bandwidth on upload. 
-            // To ensure "Low Cost", we reject if local processing fails.
-            
-            // For now, assume trimming accepted and upload original (Prototype limitation without headers)
-            toggleModal('video', false);
-            uploadMedia(state.tempFile); 
-        }
-
-        async function uploadMedia(file) {
-            if(!state.user) return;
-            
-            // Check Total Quota
-            const current = state.profile.storageUsed || 0;
-            const sizeMB = file.size / (1024*1024);
-            if(current + sizeMB > state.limits.storage) return toast("LIFETIME QUOTA EXCEEDED");
-
-            toast("Encrypting & Uploading...");
-            
-            // AI Auto-Tag (Visual Cortex)
-            let tags = [];
-            if(file.type.startsWith('image')) {
-                // Load image to canvas for TFJS
-                // Skipped for brevity in Monolith, but placeholder logic:
-                // const predictions = await cocoSsdModel.detect(imgElement);
-                // tags = predictions.map(p => p.class);
-            }
-
-            const fd = new FormData();
-            fd.append('file', file);
-            fd.append('upload_preset', CLOUD_PRESET);
-            if(tags.length > 0) fd.append('tags', tags.join(','));
-
-            try {
-                const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {method:'POST', body:fd});
-                const data = await res.json();
-                
-                // Update Ledger
-                await db.ref(`users/${state.user.uid}/storageUsed`).set(current + sizeMB);
-                document.getElementById('storage-val').innerText = (current+sizeMB).toFixed(1);
-
-                await pushMsg({ 
-                    type: file.type.startsWith('video') ? 'video' : 'image', 
-                    url: data.secure_url, 
-                    text: tags.length > 0 ? `Tags: ${tags.join(', ')}` : ''
-                });
-            } catch(e) { toast("Upload Failed"); }
-        }
-
-        async function uploadCloudUrl(url) {
-            // Helper for Pollinations re-upload
-            const fd = new FormData();
-            fd.append('file', url);
-            fd.append('upload_preset', CLOUD_PRESET);
-            const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {method:'POST', body:fd});
-            const d = await res.json();
-            return d.secure_url;
-        }
-
-        // --- CHRONOS GALLERY ---
-        function loadGallery() {
-            db.ref('images').limitToLast(20).on('value', snap => {
-                const data = snap.val();
-                if(!data) return;
-                const t = document.getElementById('coverflow-track');
-                t.innerHTML = '';
-                let i = 0;
-                Object.values(data).forEach(img => {
-                    const d = document.createElement('div');
-                    d.className = 'art-card';
-                    d.style.transform = `rotateY(${i*45}deg) translateZ(300px)`;
-                    d.innerHTML = `<img src="${img.url}">`;
-                    t.appendChild(d);
-                    i++;
-                });
-            });
-        }
-        
-        async function uploadGallery() {
-            // Re-uses uploadMedia logic but writes to 'images' node
-            const f = document.getElementById('gal-up').files[0];
-            if(f) {
-                // ... same upload logic ...
-                // Simplified for demo:
-                uploadMedia(f); // This sends to chat. Proper gallery needs separate 'images' node write.
-            }
-        }
-
-        // --- GOD MODE ---
-        function handleMsgOption(key, ts, uid) {
+        function handleMsgOption(key, m) {
             const now = Date.now();
-            const canDel = state.isAdmin || (uid === state.user.uid && now - ts < 1800000);
+            const canDel = state.isAdmin || (state.user && m.uid === state.user.uid && now - m.ts < 1800000); // 30 mins
             if(canDel && confirm("Delete Transmission?")) {
-                db.ref(`chats/${state.activeChat}/messages/${key}`).update({ isDeleted: true });
+                const path = state.activeChat==='global' ? 'chats/global/messages' : `chats/${state.activeChat}/messages`;
+                db.ref(`${path}/${key}`).update({ isDeleted: true });
             }
-        }
-
-        function exportDeepFreeze() {
-            toast("Scraping...");
-            db.ref('/').once('value', snap => {
-                const blob = new Blob([JSON.stringify(snap.val())], {type:'application/json'});
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = `SERDIT_DUMP_${Date.now()}.json`;
-                a.click();
-            });
         }
 
         // --- UTILS ---
@@ -691,22 +737,21 @@
             if(force !== undefined) m.classList.toggle('active', force);
             else m.classList.toggle('active');
         }
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-        function switchView(id) {
-            document.getElementById('view-nexus').style.display = id==='nexus'?'flex':'none';
-            document.getElementById('view-gallery').style.display = id==='gallery'?'block':'none';
-            if(window.innerWidth <= 768) toggleSidebar();
-        }
-        function closeChatMobile() {
-            document.getElementById('chat-stage').classList.remove('active');
-            document.getElementById('back-btn').style.display = 'none';
-        }
+        function closeChatMobile() { document.getElementById('chat-stage').classList.remove('active'); }
         function toast(msg) {
             const b = document.getElementById('toast-box');
-            b.innerHTML = `<div style="background:#111;color:white;padding:10px;border:1px solid #333;margin-top:5px;border-radius:5px;">${msg}</div>`;
+            b.innerHTML = `<div style="background:#111;color:white;padding:10px;border:1px solid #333; box-shadow:0 5px 15px rgba(0,0,0,0.5);">${msg}</div>`;
             setTimeout(()=>b.innerHTML='', 3000);
         }
-
+        function exportDeepFreeze() {
+            db.ref('/').once('value', s => {
+                const blob = new Blob([JSON.stringify(s.val())], {type:'application/json'});
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `SERDIT_DUMP.json`;
+                a.click();
+            });
+        }
     </script>
 </body>
 </html>
