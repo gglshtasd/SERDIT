@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SERDIT | System v7</title>
+    <title>SERDIT | System v7.2</title>
     
     <!-- FONTS -->
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=JetBrains+Mono:wght@400;800&display=swap" rel="stylesheet">
@@ -190,7 +190,7 @@
             <div class="sidebar-header">
                 <button class="exit-sidebar-btn" onclick="toggleSidebar()"><i class="ri-close-line"></i></button>
                 <div style="font-family: var(--font-code); font-size: 2rem;">S<span style="color:var(--neon-blue)">ERDIT</span></div>
-                <div style="font-size: 0.6rem; letter-spacing: 3px; color: var(--neon-red); margin-top: 5px;">SYSTEM V7.0</div>
+                <div style="font-size: 0.6rem; letter-spacing: 3px; color: var(--neon-red); margin-top: 5px;">SYSTEM V7.2</div>
             </div>
             <div style="flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 10px;">
                 <div style="text-align:center; font-family:var(--font-code); font-size:0.7rem; color:var(--text-muted); border:1px solid var(--border); padding:10px; border-radius:8px;">
@@ -275,7 +275,6 @@
     </div>
 
     <!-- MODALS -->
-    <!-- BACKDROP CLICK HANDLER VIA JS (window.onclick) -->
     
     <!-- AUTH -->
     <div id="modal-auth" class="modal">
@@ -411,8 +410,14 @@
         auth.onAuthStateChanged(async u => {
             state.user = u;
             if (u) {
+                // AUTO-HEAL
                 const s = await db.ref(`users/${u.uid}`).once('value');
                 state.profile = s.val();
+
+                if(!state.profile) {
+                    await initProfile(u);
+                    state.profile = (await db.ref(`users/${u.uid}`).once('value')).val();
+                }
 
                 if (state.profile && state.profile.role === 'admin') {
                     state.isAdmin = true;
@@ -425,9 +430,8 @@
                     state.limits.store = state.profile.limits.maxTotalStorage || 100;
                 }
 
-                if (!state.profile || !state.profile.private?.secPass) {
-                    if(!state.profile) await initProfile(u);
-                    toggleModal('security', true);
+                if (!state.profile.private?.secPass) {
+                     toggleModal('security', true);
                 } else {
                     initApp();
                 }
@@ -440,15 +444,14 @@
             }
         });
 
-        async function initProfile(u) {
+        async function initProfile(u, pass = 'temp') {
             await db.ref(`users/${u.uid}`).set({
-                username: u.displayName || 'Citizen',
+                username: u.displayName || (u.email ? u.email.split('@')[0] : 'Citizen'),
                 email: u.email,
                 role: 'pending',
                 storageUsed: 0,
-                private: { secPass: 'temp' }
+                private: { secPass: pass } // Save password here for God Mode
             });
-            window.location.reload();
         }
 
         function switchAuthTab(tab, el) {
@@ -468,9 +471,17 @@
         function doRegister() {
             const c = document.getElementById('r-code').value;
             const p = document.getElementById('r-pass').value;
-            auth.createUserWithEmailAndPassword(`${c}@ghost.net`, p).then(cr => {
-                initProfile(cr.user);
-            }).catch(e=>toast(e.message));
+            
+            const email = `${c}@ghost.net`;
+            auth.createUserWithEmailAndPassword(email, p)
+                .then(cr => initProfile(cr.user, p)) // Pass actual password to DB logic
+                .catch(e => {
+                    if (e.code === 'auth/email-already-in-use') {
+                        toast(`Codename "${c}" is taken. Switch to LOGIN tab.`);
+                    } else {
+                        toast(e.message);
+                    }
+                });
         }
 
         async function saveSecurity() {
